@@ -4929,6 +4929,19 @@ private fun MetricGrid(
         KeyMetric.CALORIES -> ({ onOpenMetric("active_kcal") })
         KeyMetric.WEIGHT -> null
     }
+    // Binnacle fork: the tile's metric glyph (same keys tapFor navigates with; Weight has none yet).
+    fun glyphFor(metric: KeyMetric): Int? = when (metric) {
+        KeyMetric.CHARGE -> metricGlyph("recovery")
+        KeyMetric.EFFORT -> metricGlyph("strain")
+        KeyMetric.REST -> metricGlyph("rest")
+        KeyMetric.HRV -> metricGlyph("hrv")
+        KeyMetric.RESTING_HR -> metricGlyph("rhr")
+        KeyMetric.BLOOD_OXYGEN -> metricGlyph("spo2")
+        KeyMetric.RESPIRATORY -> metricGlyph("resp")
+        KeyMetric.STEPS -> metricGlyph("steps")
+        KeyMetric.CALORIES -> metricGlyph("active_kcal")
+        KeyMetric.WEIGHT -> null
+    }
     // S5: slice from the FRONT of the saved order so a pinned/selected tile is never dropped or reordered
     // (#251); only the tail folds behind the expander. Mirrors the iOS visibleKeyMetrics prefix(cap).
     val hasOverflow = allTiles.size > METRICS_COLLAPSED_CAP
@@ -4951,6 +4964,7 @@ private fun MetricGrid(
                         detailed = detailed,
                         onClick = tapFor(metric),
                         modifier = Modifier.weight(1f).then(if (detailed) Modifier.fillMaxHeight() else Modifier),
+                        glyphRes = glyphFor(metric),
                     )
                 }
                 repeat(3 - rowTiles.size) { Spacer(Modifier.weight(1f)) }
@@ -5008,6 +5022,9 @@ private fun LiquidKeyTile(
     detailed: Boolean = false,
     onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    // Binnacle fork: the metric's glyph (metricGlyph key), rendered before the label on the
+    // Binnacle skin only — the non-colour channel for what this tile measures. null = no glyph.
+    glyphRes: Int? = null,
 ) {
     val hasValue = data.value != NO_DATA
     // Tap -> the tile's focused trend detail (the Sleep night-detail tile idiom): liquidPress on the
@@ -5029,13 +5046,23 @@ private fun LiquidKeyTile(
             .semantics { contentDescription = uiString(R.string.l10n_today_screen_data_label_data_value_data_unit_27f6fd6b, data.label, data.value, data.unit).trim() },
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(
-            data.label.uppercase(),
-            style = NoopType.overline.copy(fontSize = 9.sp, letterSpacing = 1.2.sp),
-            color = Palette.textTertiary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (glyphRes != null && SkinPrefs.skin == UiSkin.BINNACLE) {
+                Icon(
+                    androidx.compose.ui.res.painterResource(glyphRes),
+                    contentDescription = null,   // the label carries the name
+                    tint = Palette.textTertiary,
+                    modifier = Modifier.size(10.dp),
+                )
+            }
+            Text(
+                data.label.uppercase(),
+                style = NoopType.overline.copy(fontSize = 9.sp, letterSpacing = 1.2.sp),
+                color = Palette.textTertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 data.value,

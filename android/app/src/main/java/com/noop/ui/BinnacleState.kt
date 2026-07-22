@@ -73,12 +73,12 @@ fun metricGlyph(key: String): Int? = when (key) {
     "hr", "avg_hr", "max_hr", "resting_hr", "rhr" -> R.drawable.gl_hr
     "hrv" -> R.drawable.gl_hrv
     "spo2" -> R.drawable.gl_spo2
-    "resp_rate" -> R.drawable.gl_resp
-    "steps" -> R.drawable.gl_steps
+    "resp_rate", "resp" -> R.drawable.gl_resp
+    "steps", "steps_est" -> R.drawable.gl_steps
     "active_kcal", "energy_kcal" -> R.drawable.gl_kcal
     "strain", "effort" -> R.drawable.gl_effort
     "recovery", "charge" -> R.drawable.gl_charge
-    "sleep", "in_bed_min", "total_sleep" -> R.drawable.gl_rest
+    "sleep", "rest", "in_bed_min", "total_sleep" -> R.drawable.gl_rest
     "workouts", "workout" -> R.drawable.gl_workout
     else -> null
 }
