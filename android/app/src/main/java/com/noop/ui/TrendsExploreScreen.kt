@@ -407,20 +407,19 @@ fun TrendsExploreScreen(vm: AppViewModel) {
         // RANGE BAR , overline + title + the one segmented window control, with a caption
         // that flags a sparse auto-widen.
         item {
-        Row(verticalAlignment = Alignment.Top) {
-            Column(modifier = Modifier.weight(1f)) {
-                Overline(selected.category)
-                Text(selected.title, style = NoopType.title2, color = Palette.textPrimary)
-                // The plain-English one-liner for the three headline scores (Charge/Effort/Rest);
-                // null for every other metric, so only the scores show a subtitle here.
-                selected.description?.let { blurb ->
-                    Text(
-                        blurb,
-                        style = NoopType.footnote,
-                        color = Palette.textTertiary,
-                        modifier = Modifier.padding(top = Metrics.space2),
-                    )
-                }
+        // Title, then the range control on its own full-width line. Beside the title the 6-segment
+        // selector starved the label to a char-break waterfall ("CHARGE / Ch/ar/ge") on a phone.
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Overline(selected.category)
+            Text(selected.title, style = NoopType.title2, color = Palette.textPrimary)
+            // The plain-English one-liner for the three headline scores (Charge/Effort/Rest);
+            // null for every other metric, so only the scores show a subtitle here.
+            selected.description?.let { blurb ->
+                Text(
+                    blurb,
+                    style = NoopType.footnote,
+                    color = Palette.textTertiary,
+                )
             }
             SegmentedPillControl(
                 items = ExploreRange.entries.toList(),

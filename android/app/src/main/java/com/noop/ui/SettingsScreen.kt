@@ -92,6 +92,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -723,7 +724,7 @@ fun SettingsScreen(
                     )
                 }
                 RowDivider()
-                FormRow(label = uiString(R.string.l10n_settings_screen_sex_e301dd60)) {
+                FormRow(label = uiString(R.string.l10n_settings_screen_sex_e301dd60), stack = true) {
                     SegmentedPillControl(
                         items = SEX_OPTIONS,
                         selection = SEX_OPTIONS.firstOrNull { it.tag == profile.sex } ?: SEX_OPTIONS[0],
@@ -926,7 +927,7 @@ fun SettingsScreen(
             blurb = "Choose how distances, weights, heights, temperatures and Effort are shown. Your data is always stored the same way. This only changes the display.",
         ) {
             Column {
-                FormRow(label = uiString(R.string.l10n_settings_screen_measurement_system_701d765d)) {
+                FormRow(label = uiString(R.string.l10n_settings_screen_measurement_system_701d765d), stack = true) {
                     SegmentedPillControl(
                         items = listOf(UnitSystem.METRIC, UnitSystem.IMPERIAL),
                         selection = unitSystem,
@@ -938,7 +939,7 @@ fun SettingsScreen(
                     )
                 }
                 RowDivider()
-                FormRow(label = uiString(R.string.l10n_settings_screen_temperature_0a9062a9)) {
+                FormRow(label = uiString(R.string.l10n_settings_screen_temperature_0a9062a9), stack = true) {
                     // Three-way: "Match" follows the system above; °C / °F pin it explicitly. Stored as an
                     // empty string ("match") or the TemperatureUnit raw value.
                     SegmentedPillControl(
@@ -960,7 +961,7 @@ fun SettingsScreen(
                 RowDivider()
                 // Effort scale (#268) — NOOP's native 0–100 Effort or WHOOP's 0–21 Day Strain axis.
                 // Display-only; the stored value never changes, so a flip just re-labels every read-out.
-                FormRow(label = uiString(R.string.l10n_settings_screen_effort_scale_81afa9ef)) {
+                FormRow(label = uiString(R.string.l10n_settings_screen_effort_scale_81afa9ef), stack = true) {
                     SegmentedPillControl(
                         items = listOf(EffortScale.HUNDRED, EffortScale.WHOOP),
                         selection = effortScale,
@@ -980,7 +981,7 @@ fun SettingsScreen(
             title = uiString(R.string.l10n_settings_screen_appearance_41def7a0),
             blurb = "Choose Light, Dark, or follow your system. Dark is the signature near-black; Light keeps the same clean look on a bright canvas.",
         ) {
-            FormRow(label = uiString(R.string.l10n_settings_screen_theme_a797e309)) {
+            FormRow(label = uiString(R.string.l10n_settings_screen_theme_a797e309), stack = true) {
                 SegmentedPillControl(
                     items = listOf(AppearanceMode.SYSTEM, AppearanceMode.LIGHT, AppearanceMode.DARK),
                     selection = themeMode,
@@ -994,7 +995,7 @@ fun SettingsScreen(
             RowDivider()
             // Binnacle fork: skin toggle. Noop = stock look; Binnacle = the house design language
             // (amber/cyan instrument panel, purist lightness data ramps). Applies live, both schemes.
-            FormRow(label = "Skin") {
+            FormRow(label = "Skin", stack = true) {
                 SegmentedPillControl(
                     items = listOf(UiSkin.STOCK, UiSkin.BINNACLE),
                     selection = uiSkin,
@@ -1046,7 +1047,7 @@ fun SettingsScreen(
             if (uiSkin == UiSkin.STOCK) {
                 RowDivider()   // #79 parity: the hairline every other section has between FormRows (Android rows
                                // were already 16dp-spaced, unlike iOS where they touched — this matches both)
-                FormRow(label = uiString(R.string.l10n_settings_screen_chart_colours_525f4a37)) {
+                FormRow(label = uiString(R.string.l10n_settings_screen_chart_colours_525f4a37), stack = true) {
                     // Titanium = brand gold/amber/blue ramps; Classic = throwback red→green readiness scale
                     // (cool→hot zones, green→red stress). Re-colours every gauge/chart, in both schemes.
                     SegmentedPillControl(
@@ -1063,7 +1064,7 @@ fun SettingsScreen(
             RowDivider()
             // Trend chart style (line vs bar). Display-only: flips the Trends tab's charts between the
             // gradient line and value-ramp bars. The plotted data is identical either way.
-            FormRow(label = uiString(R.string.l10n_settings_screen_trend_charts_19085c81)) {
+            FormRow(label = uiString(R.string.l10n_settings_screen_trend_charts_19085c81), stack = true) {
                 SegmentedPillControl(
                     items = listOf(TrendChartStyle.LINE, TrendChartStyle.BAR),
                     selection = trendChartStyle,
@@ -1202,7 +1203,7 @@ fun SettingsScreen(
             title = uiString(R.string.l10n_settings_screen_app_icon_abde7a74),
             blurb = "Choose how NOOP looks on your home screen. The launcher may take a moment to refresh the icon after you change it.",
         ) {
-            FormRow(label = uiString(R.string.l10n_settings_screen_icon_716f63b9)) {
+            FormRow(label = uiString(R.string.l10n_settings_screen_icon_716f63b9), stack = true) {
                 SegmentedPillControl(
                     items = listOf(false, true),
                     selection = appIconNavy,
@@ -1602,7 +1603,7 @@ fun SettingsScreen(
                 // the whole night (NOOP's long-standing value) or DEEP sleep only (WHOOP-style, reads lower
                 // and more comparable to WHOOP/Polar). Unlike the Effort scale this CHANGES the number, so a
                 // switch forces a re-score + re-baseline.
-                FormRow(label = uiString(R.string.l10n_settings_screen_hrv_window_e74320b8)) {
+                FormRow(label = uiString(R.string.l10n_settings_screen_hrv_window_e74320b8), stack = true) {
                     SegmentedPillControl(
                         items = listOf(HrvWindow.WHOLE_NIGHT, HrvWindow.DEEP_SLEEP),
                         selection = hrvWindow,
@@ -3123,22 +3124,40 @@ private fun ToggleRow(
 
 /** Label on the left, control on the right — the two-column form feel. */
 @Composable
-private fun FormRow(label: String, control: @Composable () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 44.dp)
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Text(
-            label,
-            style = NoopType.body,
-            color = Palette.textPrimary,
-            modifier = Modifier.weight(1f),
-        )
-        control()
+private fun FormRow(label: String, stack: Boolean = false, control: @Composable () -> Unit) {
+    // [stack] = label ABOVE a full-width control. Wide controls (3–4-segment pills) starve the side
+    // label on a phone until it char-breaks ("Se/x", "Waist (option/al)") — a desktop-width assumption.
+    // Stacked rows always fit; inline rows (steppers, single toggles) keep the label beside the control
+    // but cap it at two lines so a long name wraps at a word, never mid-word.
+    if (stack) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(label, style = NoopType.body, color = Palette.textPrimary)
+            control()
+        }
+    } else {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 44.dp)
+                .padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text(
+                label,
+                style = NoopType.body,
+                color = Palette.textPrimary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            control()
+        }
     }
 }
 

@@ -117,17 +117,16 @@ fun IntelligenceScreen(vm: AppViewModel) {
             }
         } else {
             item {
-                // Header row: section label left, range control right. Lets you narrow the
-                // per-day list to a recent window (lexicographic YYYY-MM-DD compare == chronological).
-                Row(
+                // Header: section label, then the range control on its OWN full-width line. Beside the
+                // title, the 6-segment selector (W/M/3M/6M/1Y/ALL) starved the label to a char-break
+                // waterfall ("RE/CE/NT B/y/D/a/y") on a phone — a desktop-width assumption. Stacked, both
+                // fit. Lets you narrow the per-day list to a recent window.
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Metrics.gap),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Overline("Recent")
-                        Text(uiString(R.string.l10n_intelligence_screen_by_day_2e5d14ca), style = NoopType.title2, color = Palette.textPrimary)
-                    }
+                    Overline("Recent")
+                    Text(uiString(R.string.l10n_intelligence_screen_by_day_2e5d14ca), style = NoopType.title2, color = Palette.textPrimary)
                     SegmentedPillControl(
                         items = IntelRange.entries.toList(),
                         selection = range,
