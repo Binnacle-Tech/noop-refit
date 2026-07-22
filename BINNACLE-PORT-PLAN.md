@@ -119,3 +119,44 @@ Drop the four Helm tenets into a `PRINCIPLES.md`; pass NOOP's copy through the V
 Ship Phase 1+2 first (immediate Binnacle look, near-zero risk), then 4+5+6 (contract + modes +
 shape), then tackle Phase 3 surface-by-surface last, once the decisions above are settled.
 Resolve the 5 decisions and I'll turn any phase into concrete edits.
+
+---
+
+# Compliance audit — 2026-07-21 (against Binnacle-DesignLanguage)
+
+## Compliant
+- **§02 Colour** — accent contract mapped into both schemes; purist lightness ramps for
+  recovery/strain/zones (amber), sleep (cyan, awake on neutral); Classic/Titanium rainbow
+  encodings yield while the skin is active; light mode is the re-tune, not an inversion.
+- **§03 Typography (faces)** — Space Grotesk / Inter / IBM Plex Mono bundled, role-mapped,
+  skin-reactive. (Latin subsets; accented locales fall back per-glyph.)
+- **§12 Glyphs** — core set ported (24×24, ~2px, round, currentColor-equivalent tinting);
+  NOOP extension sheet (domains + metrics) designed under the same contract and documented
+  in the house doc; UiState pairs colour+glyph structurally (StateLine).
+- **§16 Ports** — mapped Binnacle values into the host's frozen token API behind its own
+  theme seam; stock byte-identical; pattern recorded in the house doc.
+- **Helm 2 (attribute)** — font OFL attribution added to ATTRIBUTION.md.
+- **Helm 3 (fail loud)** — writeback outcomes are semantic states with the fix in reach
+  (permission line = warning glyph + tap-to-regrant); raw causes logged locally (NoopHC).
+
+## Partial
+- **Never colour alone** — enforced on retrofitted surfaces (writeback status, hero domains,
+  Key Metrics tiles). Many legacy surfaces still signal by colour only (readiness flags,
+  source badges, zone charts' in-chart encoding). Rollout continues surface-by-surface.
+- **§03 (machine data reads mono)** — only the raw/log style is mono; live values remain
+  tabular Inter. Open decision.
+- **Part III Voice** — new copy follows the rules; existing copy unaudited.
+
+## Not yet compliant
+- **§06 Signature rule** — the biggest open violation. Day-cycle sky, card washes, glows,
+  and the liquid gauges are all loud at once. Candidate signature: the liquid gauge trio;
+  everything else quiets around it. (Planned "signature purge".)
+- **§11 Modes & vision profiles** — Dark/Light only; Medium, Contrast, deutan/protan/tritan
+  pending (values exist in BinnacleTheme.kt).
+- **§07 Motion restraint / reduced-motion** — unaudited; NOOP has ambient liquid/breathe
+  animation. Doc requires reduced-motion respected.
+- **§13 Form controls** — "switch means immediate": the active-calories opt-in is a checkbox
+  but applies immediately → per the doc it should be a switch. User decision pending
+  (checkbox was explicitly requested).
+- **§04/§05/§14** — layout grammar, component kit, loading/empty/error idioms: NOOP's own,
+  unaudited against the doc.

@@ -54,3 +54,13 @@ NOOP contains no WHOOP proprietary code, binaries, firmware, logos, or assets, a
 performs no DRM circumvention. It operates only with the user's own device and data.
 NOOP is **not a medical device**; all metrics (HR, HRV, recovery, strain, sleep,
 SpO₂, temperature) are approximations and not clinically validated.
+
+## Bundled fonts (Binnacle skin — this fork)
+The Binnacle skin bundles three typefaces in `android/app/src/main/res/font/`, all under the
+SIL Open Font License 1.1 (https://openfontlicense.org):
+- **Space Grotesk** — © Florian Karsten (https://github.com/floriankarsten/space-grotesk)
+- **Inter** — © Rasmus Andersson (https://github.com/rsms/inter)
+- **IBM Plex Mono** — © IBM Corp. (https://github.com/IBM/plex)
+
+Font files are latin subsets obtained via Fontsource (https://fontsource.org), converted
+WOFF2→TTF without modification to the glyph outlines.
