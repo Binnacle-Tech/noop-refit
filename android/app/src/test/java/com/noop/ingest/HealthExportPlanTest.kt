@@ -65,6 +65,34 @@ class HealthExportPlanTest {
         assertEquals(5L, plan.newFrontierSec)  // frontier past the decimated-away tail
     }
 
+    @Test fun heartRate_dropsZeroBpmDropoutSamples() {
+        // Sensor dropout banks bpm=0; HC rejects beatsPerMinute < 1. Zeros must be excluded from
+        // the plan — one bad sample used to abort the whole HR concern.
+        val plan = HealthExportPlan.heartRate(
+            listOf(hr(0, 60), hr(40, 0), hr(80, 62)), listOf(HealthExportPlan.Window(0, 100)),
+            frontierSec = -1L, decimateSec = 1, chunkSec = 3600, maxSamplesPerChunk = 1000)
+        assertEquals(listOf(0L, 80L), plan.chunks.flatMap { it.points }.map { it.tsSec })
+        assertTrue(plan.chunks.flatMap { it.points }.all { it.bpm >= 1 })
+    }
+
+    @Test fun heartRate_frontierAdvancesPastTrailingZeroBpm() {
+        // A trailing dropout sample must still advance the frontier (never reconsidered), even
+        // though nothing after the last valid sample is exported.
+        val plan = HealthExportPlan.heartRate(
+            listOf(hr(0, 60), hr(50, 0)), emptyList(), frontierSec = -1L,
+            decimateSec = 1, chunkSec = 3600, maxSamplesPerChunk = 1000)
+        assertEquals(listOf(0L), plan.chunks.flatMap { it.points }.map { it.tsSec })
+        assertEquals(50L, plan.newFrontierSec)
+    }
+
+    @Test fun heartRate_allZeroBpmStillAdvancesFrontier() {
+        val plan = HealthExportPlan.heartRate(
+            listOf(hr(10, 0), hr(20, 0)), emptyList(), frontierSec = -1L,
+            decimateSec = 1, chunkSec = 3600, maxSamplesPerChunk = 1000)
+        assertTrue(plan.chunks.isEmpty())
+        assertEquals(20L, plan.newFrontierSec)
+    }
+
     @Test fun heartRate_chunksByTimeSpan() {
         val samples = listOf(hr(0, 60), hr(10, 60), hr(4000, 60)) // gap > 3600s
         val plan = HealthExportPlan.heartRate(samples, listOf(HealthExportPlan.Window(0, 5000)),

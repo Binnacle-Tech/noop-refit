@@ -43,11 +43,19 @@ object HealthExportPlan {
         val fresh = samples.filter { it.tsSec > frontierSec }.sortedBy { it.tsSec }
         if (fresh.isEmpty()) return HrPlan(emptyList(), frontierSec)
 
+        // Sensor-dropout guard: the strap banks bpm=0 samples during contact loss, and Health
+        // Connect's HeartRateRecord.Sample rejects beatsPerMinute < 1 — one such sample used to
+        // abort the whole HR concern AND pin the frontier there, wedging the export permanently.
+        // Drop invalid samples from the plan but keep them in `fresh`, so the frontier still
+        // advances past them and they are never reconsidered.
+        val valid = fresh.filter { it.bpm >= 1 }
+        if (valid.isEmpty()) return HrPlan(emptyList(), fresh.last().tsSec)
+
         fun inWindow(ts: Long) = windows.any { ts >= it.startSec && ts <= it.endSec }
 
         val kept = ArrayList<HrPoint>()
         var lastOut = Long.MIN_VALUE / 2
-        for (p in fresh) {
+        for (p in valid) {
             if (inWindow(p.tsSec)) {
                 kept.add(p); lastOut = p.tsSec
             } else if (p.tsSec - lastOut >= decimateSec) {
