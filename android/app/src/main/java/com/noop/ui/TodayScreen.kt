@@ -2437,10 +2437,13 @@ private fun ScoreHeroRow(
             ) {
                 // CHARGE, recovery 0–100, as a liquid VESSEL with the value counting up over it. Honest
                 // empty / calibrating overlay; badges its recovery winner.
+                val binnacleHero = SkinPrefs.skin == UiSkin.BINNACLE
                 HeroRingColumn(
                     domain = DomainTheme.Charge,
                     onInfo = { onScoreInfo(ScoreSection.CHARGE) },
                     onRingTap = onChargeTap,
+                    modifier = Modifier.weight(1f),
+                    compactLabel = binnacleHero,
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         // #802: when today has no Charge yet but a prior night's value is carried, draw a
@@ -2476,7 +2479,12 @@ private fun ScoreHeroRow(
                     }
                 }
                 // EFFORT, strain on the gauge, on the user's selected scale, as a liquid vessel.
-                HeroRingColumn(domain = DomainTheme.Effort, onInfo = { onScoreInfo(ScoreSection.EFFORT) }) {
+                HeroRingColumn(
+                    domain = DomainTheme.Effort,
+                    onInfo = { onScoreInfo(ScoreSection.EFFORT) },
+                    modifier = Modifier.weight(1f),
+                    compactLabel = binnacleHero,
+                ) {
                     Box(contentAlignment = Alignment.Center) {
                         HeroScoreVessel(
                             fraction = if (effortOutOf > 0) effortVal / effortOutOf else 0.0,
@@ -2490,12 +2498,15 @@ private fun ScoreHeroRow(
                         if (strain == null) RingNoData()
                     }
                 }
-                // REST, sleep composite 0–100. Its fixed-width box also anchors the card-level source badge:
-                // the badge may grow leftward, but its trailing edge always matches the Rest vessel.
-                Box(modifier = Modifier.width(ring)) {
+                // REST, sleep composite 0–100. An EQUAL-thirds column (weight) so all three vessels are
+                // the SAME size and none clips — the old fixed-width box made Rest narrower than its
+                // siblings and clipped its label to "R…". The box still anchors the card source badge.
+                Box(modifier = Modifier.weight(1f)) {
                     HeroRingColumn(
                         domain = DomainTheme.Rest,
                         onInfo = { onScoreInfo(ScoreSection.REST) },
+                        modifier = Modifier.fillMaxWidth(),
+                        compactLabel = binnacleHero,
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             HeroScoreVessel(
@@ -2553,9 +2564,14 @@ private fun HeroRingColumn(
     // A1: when non-null (Charge), the ring is tappable and opens the breakdown sheet. The chevron cue is
     // overlaid by the caller INSIDE the ring box so it adds no stacked height (#762 self-sizing parity).
     onRingTap: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+    // Binnacle fork: drop the trailing chevron so the label (glyph + word) fits an equal-thirds column
+    // on a phone. The domain glyph already marks the column, and the whole row stays tappable.
+    compactLabel: Boolean = false,
     ring: @Composable () -> Unit,
 ) {
     Column(
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -2617,12 +2633,14 @@ private fun HeroRingColumn(
             // One UI defaults) "REST" could wrap, growing the whole hero card. One line, ellipsis if forced.
             Text(domain.label.uppercase(), style = NoopType.overline, color = Palette.textSecondary,
                  maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Icon(
-                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = uiString(R.string.l10n_today_screen_how_domain_label_is_calculated_8897768c, domain.label),
-                tint = Palette.textSecondary.copy(alpha = 0.6f),
-                modifier = Modifier.size(14.dp),
-            )
+            if (!compactLabel) {
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = uiString(R.string.l10n_today_screen_how_domain_label_is_calculated_8897768c, domain.label),
+                    tint = Palette.textSecondary.copy(alpha = 0.6f),
+                    modifier = Modifier.size(14.dp),
+                )
+            }
         }
     }
 }
