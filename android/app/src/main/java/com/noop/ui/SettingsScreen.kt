@@ -1010,7 +1010,11 @@ fun SettingsScreen(
             // profiles carry separation by lightness (cyan lightens, danger moves off red).
             if (uiSkin == UiSkin.BINNACLE) {
                 RowDivider()
-                FormRow(label = "Panel") {
+                // Stacked (label OVER control): these pills span 3–4 segments, and inside FormRow they
+                // crush the side label to a one-character waterfall. Binnacle §15 collapse order —
+                // when a row runs out of width, the layout changes; the label never degrades.
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Panel", style = NoopType.subhead, color = Palette.textPrimary)
                     SegmentedPillControl(
                         items = listOf(BinnaclePanel.AUTO, BinnaclePanel.MEDIUM, BinnaclePanel.CONTRAST),
                         selection = binnaclePanel,
@@ -1022,7 +1026,8 @@ fun SettingsScreen(
                     )
                 }
                 RowDivider()
-                FormRow(label = "Vision") {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Vision", style = NoopType.subhead, color = Palette.textPrimary)
                     SegmentedPillControl(
                         items = listOf(BinnacleVision.OFF, BinnacleVision.DEUTAN, BinnacleVision.PROTAN, BinnacleVision.TRITAN),
                         selection = binnacleVision,
