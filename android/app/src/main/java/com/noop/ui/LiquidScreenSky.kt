@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -56,12 +57,28 @@ fun LiquidScreenSky(height: Dp = 340.dp, fillHeight: Boolean = false) {
             .background(Palette.surfaceBase)
             .clearAndSetSemantics {}, // decorative — invisible to TalkBack
     ) {
-        // The static time-of-day sky, top-aligned, settling into Palette.surfaceBase over its lower half.
-        LiquidSkyStatic(
-            hour = null, // live local hour (hour + minute/60)
-            modifier = if (fillHeight) Modifier.fillMaxSize() else Modifier.fillMaxWidth().height(height),
-            // A partial settle in fill-height mode keeps the horizon tint alive behind the scroll.
-            settleStrength = if (fillHeight) 0.78f else 1f,
-        )
+        if (SkinPrefs.skin == UiSkin.BINNACLE) {
+            // Binnacle §06 (signature purge): the liquid gauge trio is the ONE loud element, so the
+            // painted time-of-day scene yields — the backdrop is a whisper of panel-tone gradient
+            // dissolving into the canvas, keeping the depth cue without competing for attention.
+            // The day-cycle toggle still gates whether this slot renders at all (stock unchanged).
+            Box(
+                modifier = (if (fillHeight) Modifier.fillMaxSize() else Modifier.fillMaxWidth().height(height))
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Palette.scenicCenter,
+                            1f to Palette.surfaceBase,
+                        ),
+                    ),
+            )
+        } else {
+            // The static time-of-day sky, top-aligned, settling into Palette.surfaceBase over its lower half.
+            LiquidSkyStatic(
+                hour = null, // live local hour (hour + minute/60)
+                modifier = if (fillHeight) Modifier.fillMaxSize() else Modifier.fillMaxWidth().height(height),
+                // A partial settle in fill-height mode keeps the horizon tint alive behind the scroll.
+                settleStrength = if (fillHeight) 0.78f else 1f,
+            )
+        }
     }
 }

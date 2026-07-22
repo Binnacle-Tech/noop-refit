@@ -149,9 +149,9 @@ Resolve the 5 decisions and I'll turn any phase into concrete edits.
 - **Part III Voice** — new copy follows the rules; existing copy unaudited.
 
 ## Not yet compliant
-- **§06 Signature rule** — the biggest open violation. Day-cycle sky, card washes, glows,
-  and the liquid gauges are all loud at once. Candidate signature: the liquid gauge trio;
-  everything else quiets around it. (Planned "signature purge".)
+- **§06 Signature rule** — DECIDED: the signature is the **liquid gauge trio**. Purge in
+  progress: the day-cycle sky now yields to a quiet ink gradient on the skin (first pass);
+  still to audit: card washes/glow blooms outside the gauges, ambient motion (§07).
 - **§11 Modes & vision profiles** — DONE: Medium + Contrast panel modes and deutan/protan/
   tritan profiles shipped (Settings → Appearance, Binnacle skin only). Known gap: vision
   retune skips the Light re-tune pending its own contrast audit.
