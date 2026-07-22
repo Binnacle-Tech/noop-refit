@@ -2586,14 +2586,27 @@ private fun HeroRingColumn(
             // slot, the clickable Row (the tap target) only ever grows, and the Row stays plain
             // start-to-end content, no offset maths, so RTL mirrors identically (the icon is AutoMirrored
             // anyway). Null description keeps it out of TalkBack: it is a spacer, not content.
-            Icon(
-                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = Palette.textSecondary.copy(alpha = 0.6f),
-                modifier = Modifier
-                    .size(14.dp)
-                    .alpha(0f),
-            )
+            // Binnacle fork: the leading slot exists purely to balance the trailing chevron (it was an
+            // invisible 14dp icon). On the Binnacle skin it carries the DOMAIN GLYPH instead — under the
+            // purist ramps the domains no longer differ by loud hue, so the glyph is the channel that
+            // tells Charge/Effort/Rest/Stress apart (§12: a category that loses its colour gains a glyph).
+            if (SkinPrefs.skin == UiSkin.BINNACLE) {
+                Icon(
+                    androidx.compose.ui.res.painterResource(domain.iconRes),
+                    contentDescription = null,   // the adjacent label carries the name
+                    tint = Palette.textSecondary,
+                    modifier = Modifier.size(14.dp),
+                )
+            } else {
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = Palette.textSecondary.copy(alpha = 0.6f),
+                    modifier = Modifier
+                        .size(14.dp)
+                        .alpha(0f),
+                )
+            }
             // #74: never wrap the hero label onto a second line — at a larger font/screen-zoom (Samsung
             // One UI defaults) "REST" could wrap, growing the whole hero card. One line, ellipsis if forced.
             Text(domain.label.uppercase(), style = NoopType.overline, color = Palette.textSecondary,
