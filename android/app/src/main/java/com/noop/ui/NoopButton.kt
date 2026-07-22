@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -168,7 +170,10 @@ fun NoopButton(
         .graphicsLayer { scaleX = scale; scaleY = scale }
         .alpha(opacity)
         .let { if (fullWidth) it.fillMaxWidth() else it }
-        .height(NoopButtonMetrics.height)
+        // heightIn(min) not a fixed height: a long label (e.g. "Recalibrate Charge baseline",
+        // "Set up automatic backups") used to ellipsise to "Recalibrate Charge ba…" against the
+        // one-line cap below. The button now GROWS to a second line instead of truncating.
+        .heightIn(min = NoopButtonMetrics.height)
         .defaultMinSize(minHeight = NoopButtonMetrics.minHitTarget)
         .clip(shape)
 
@@ -207,8 +212,10 @@ fun NoopButton(
                 letterSpacing = 0.2.sp, // a hair of openness on the semibold face (iOS tracking 0.2)
             ),
             color = appearance.label,
-            maxLines = 1,
+            textAlign = TextAlign.Center,
+            maxLines = 2,   // wrap a long label to a second line rather than truncate it
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(vertical = 8.dp),
         )
     }
 }
