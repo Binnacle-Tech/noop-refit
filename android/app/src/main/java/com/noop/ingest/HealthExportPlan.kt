@@ -74,6 +74,23 @@ object HealthExportPlan {
         return HrPlan(chunks, fresh.last().tsSec)
     }
 
+    // ---- Active energy: opt-in whole-day ActiveCaloriesBurnedRecord from the on-device estimate ----
+
+    /** One day's on-device active-energy estimate ([com.noop.data.DailyMetric.activeKcalEst]); [day] is
+     *  "YYYY-MM-DD". A null/≤0 value means the day had no scored HR window — nothing to share. */
+    data class ActiveKcalInput(val day: String, val kcal: Double?)
+    /** A day worth exporting: [clientId] is `noop-activekcal-<day>` so a later recompute upserts. */
+    data class ActiveKcalPlan(val day: String, val kcal: Double, val clientId: String)
+
+    /** Keep only days with a real positive estimate — never emit a fabricated zero for a blank day
+     *  (same honesty rule as the HR/sleep planners). Pure; the writer turns each into a whole-day
+     *  interval record. */
+    fun activeCalories(days: List<ActiveKcalInput>): List<ActiveKcalPlan> =
+        days.mapNotNull { d ->
+            val k = d.kcal ?: return@mapNotNull null
+            if (k <= 0.0) null else ActiveKcalPlan(d.day, k, "noop-activekcal-${d.day}")
+        }
+
     // ---- Sleep sessions: AWAKE vs SLEEPING only (fine stages deferred until stager validated) ----
 
     /** One stored fragment as the export sees it: [keyStartTs] is the immutable detected onset (the

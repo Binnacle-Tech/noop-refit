@@ -27,6 +27,18 @@ object WorkoutSport {
     /** The default when none is chosen ("Other"). */
     val default: Sport get() = all.first { it.name == "Other" }
 
+    /** Reverse of [Sport.name] -> [Sport.exerciseType], case-insensitive and whitespace-trimmed, built
+     *  once from [all] (so the EXTRA sports resolve to their fallback HC type — Padel/Pickleball ->
+     *  Other, Bodybuilding -> Strength, etc.). Lets the Health Connect writeback turn a stored
+     *  [com.noop.data.WorkoutRow.sport] label back into an [ExerciseSessionRecord] type. */
+    private val typeByName: Map<String, Int> = all.associate { it.name.trim().lowercase() to it.exerciseType }
+
+    /** HC [ExerciseSessionRecord] type for a workout's [sportName]. Unknown / free-typed labels (a
+     *  detected bout, an import from another app) fall back to "Other" so the session still exports —
+     *  never dropped for lacking an exact catalogue match. Mirrors the picker's own fallback. */
+    fun exerciseTypeForName(sportName: String): Int =
+        typeByName[sportName.trim().lowercase()] ?: default.exerciseType
+
     /** Sports where a step count is meaningful — feet on the ground — so the workout summary can show
      *  steps (#398). Deliberately narrow: outdoor + treadmill run/walk and hiking, NOT cycling/rowing/
      *  swimming (no footfalls) or gym/court sports (a step tally would be noise). Kept in lockstep with

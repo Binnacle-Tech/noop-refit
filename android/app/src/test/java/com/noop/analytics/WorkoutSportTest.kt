@@ -73,4 +73,35 @@ class WorkoutSportTest {
         val names = WorkoutSport.all.map { it.name }
         assertTrue(names.indexOf("Bowling") < names.indexOf("Other"))
     }
+
+    // --- exerciseTypeForName: the reverse (label -> HC type) lookup the workout writeback uses ---
+
+    @Test fun exerciseTypeForName_mapsCatalogueLabel() {
+        assertEquals(ExerciseSessionRecord.EXERCISE_TYPE_RUNNING, WorkoutSport.exerciseTypeForName("Running"))
+        assertEquals(ExerciseSessionRecord.EXERCISE_TYPE_BIKING, WorkoutSport.exerciseTypeForName("Cycling"))
+        assertEquals(ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING, WorkoutSport.exerciseTypeForName("Strength"))
+    }
+
+    @Test fun exerciseTypeForName_isCaseAndWhitespaceInsensitive() {
+        assertEquals(ExerciseSessionRecord.EXERCISE_TYPE_RUNNING, WorkoutSport.exerciseTypeForName("  rUnNiNg  "))
+    }
+
+    @Test fun exerciseTypeForName_extrasRideTheirFallbackType() {
+        // EXTRA sports HC has no dedicated type for resolve to the type they ride on (#714/#768/#152).
+        assertEquals(ExerciseSessionRecord.EXERCISE_TYPE_OTHER_WORKOUT, WorkoutSport.exerciseTypeForName("Padel"))
+        assertEquals(ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING, WorkoutSport.exerciseTypeForName("Bodybuilding"))
+        assertEquals(ExerciseSessionRecord.EXERCISE_TYPE_WALKING, WorkoutSport.exerciseTypeForName("Treadmill walk"))
+    }
+
+    @Test fun exerciseTypeForName_unknownOrFreeTypedFallsBackToOther() {
+        // A detected bout / foreign import with a non-catalogue label still exports (as Other), never dropped.
+        assertEquals(ExerciseSessionRecord.EXERCISE_TYPE_OTHER_WORKOUT, WorkoutSport.exerciseTypeForName("Zumba-ish"))
+        assertEquals(ExerciseSessionRecord.EXERCISE_TYPE_OTHER_WORKOUT, WorkoutSport.exerciseTypeForName(""))
+    }
+
+    @Test fun exerciseTypeForName_everyCatalogueSportRoundTrips() {
+        for (s in WorkoutSport.all) {
+            assertEquals("round-trip for '${s.name}'", s.exerciseType, WorkoutSport.exerciseTypeForName(s.name))
+        }
+    }
 }

@@ -1847,6 +1847,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val hcLastSync: StateFlow<Long> = _hcLastSync.asStateFlow()
     private val _hcWriteback = MutableStateFlow(NoopPrefs.hcWriteback(appContext))
     val hcWriteback: StateFlow<Boolean> = _hcWriteback.asStateFlow()
+    private val _hcWriteActiveKcal = MutableStateFlow(NoopPrefs.hcWriteActiveKcal(appContext))
+    val hcWriteActiveKcal: StateFlow<Boolean> = _hcWriteActiveKcal.asStateFlow()
 
     // Last writeback outcome (#660). Read from prefs (the writer persists it — including on the
     // background BLE path, which never touches this VM), so Data Sources shows a failing share
@@ -1899,6 +1901,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun setHcWriteback(enabled: Boolean) {
         _hcWriteback.value = enabled
         NoopPrefs.setHcWriteback(appContext, enabled)
+    }
+
+    /** Flip the opt-in active-energy share (extra to [setHcWriteback]). Persists; the UI requests the
+     *  WRITE_ACTIVE_CALORIES permission and kicks a write on enable. The 15-min writeback reads the pref
+     *  each run, so no further plumbing is needed. Default OFF. */
+    fun setHcWriteActiveKcal(enabled: Boolean) {
+        _hcWriteActiveKcal.value = enabled
+        NoopPrefs.setHcWriteActiveKcal(appContext, enabled)
     }
 
     /** One immediate writeback (permissions assumed granted — the UI gates on that). */

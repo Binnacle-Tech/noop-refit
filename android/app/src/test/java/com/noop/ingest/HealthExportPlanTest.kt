@@ -81,6 +81,32 @@ class HealthExportPlanTest {
         assertEquals(3, plan.chunks.size) // 2 + 2 + 1
     }
 
+    // ---- Active-energy (opt-in) tests ----
+
+    private fun kcal(day: String, k: Double?) = HealthExportPlan.ActiveKcalInput(day, k)
+
+    @Test fun activeCalories_emitsOnlyDaysWithPositiveEstimate() {
+        val out = HealthExportPlan.activeCalories(listOf(
+            kcal("2026-07-18", 540.0),
+            kcal("2026-07-19", null),   // no scored HR window -> skipped
+            kcal("2026-07-20", 0.0),    // zero -> not a fabricated share
+            kcal("2026-07-21", 610.5),
+        ))
+        assertEquals(listOf("2026-07-18", "2026-07-21"), out.map { it.day })
+        assertEquals(540.0, out[0].kcal, 0.0)
+        assertEquals(610.5, out[1].kcal, 0.0)
+    }
+
+    @Test fun activeCalories_clientIdKeysOffDayForIdempotentUpsert() {
+        val out = HealthExportPlan.activeCalories(listOf(kcal("2026-07-21", 420.0)))
+        assertEquals("noop-activekcal-2026-07-21", out[0].clientId)
+    }
+
+    @Test fun activeCalories_negativeEstimateIsSkipped() {
+        val out = HealthExportPlan.activeCalories(listOf(kcal("2026-07-21", -5.0)))
+        assertTrue(out.isEmpty())
+    }
+
     // ---- Sleep session tests ----
 
     /** Unedited fragment: key == effective onset (the common case). */

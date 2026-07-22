@@ -33,6 +33,8 @@ import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.SettingsInputAntenna
 import androidx.compose.material.icons.filled.Watch
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -117,6 +119,7 @@ fun DataSourcesScreen(vm: AppViewModel) {
     val hcSyncHours by vm.hcSyncHours.collectAsStateWithLifecycle()
     val hcLastSync by vm.hcLastSync.collectAsStateWithLifecycle()
     val hcWriteback by vm.hcWriteback.collectAsStateWithLifecycle()
+    val hcWriteActiveKcal by vm.hcWriteActiveKcal.collectAsStateWithLifecycle()
     val hcWbStatus by vm.hcWritebackStatus.collectAsStateWithLifecycle()
     // A background (BLE-path) writeback updates prefs, not the VM's flow — re-read on entry so the
     // status line reflects the latest attempt whenever this screen is opened (#660).
@@ -328,16 +331,46 @@ fun DataSourcesScreen(vm: AppViewModel) {
             val granted = runCatching {
                 HealthConnectImporter.client(context).permissionController.getGrantedPermissions()
             }.getOrDefault(emptySet())
+            // Vitals + exercise always; active-energy WRITE only when the user opted into that extra, so
+            // toggling writeback off/on re-requests it too. Base result-handler stays keyed on vitals.
+            val want = HealthConnectWriter.PERMISSIONS + HealthConnectWriter.EXERCISE_PERMISSIONS +
+                (if (vm.hcWriteActiveKcal.value) HealthConnectWriter.ACTIVE_CALORIES_PERMISSIONS else emptySet())
             // Gate on vitals AND exercise perms so a user who enabled writeback before exercise
             // writeback shipped (vitals-only grant) still gets re-prompted for WRITE_EXERCISE/
             // WRITE_DISTANCE — otherwise their workouts silently never reach Health Connect (#412).
-            if (granted.containsAll(HealthConnectWriter.PERMISSIONS + HealthConnectWriter.EXERCISE_PERMISSIONS)) {
+            if (granted.containsAll(want)) {
                 vm.writebackHealthConnectNow()
             } else {
                 // Request vitals + exercise-session write perms together so GPS workouts can write
                 // back too (the launcher-result handler stays keyed on the vital PERMISSIONS, so
                 // exercise writeback is opt-in + non-fatal if the user declines it). v1.71 / #412.
-                hcWritePermissionLauncher.launch(HealthConnectWriter.PERMISSIONS + HealthConnectWriter.EXERCISE_PERMISSIONS)
+                hcWritePermissionLauncher.launch(want)
+            }
+        }
+    }
+
+    // The opt-in active-energy share has its OWN WRITE permission. Requested only when the user ticks
+    // the box; denial flips the checkbox back off so the UI never claims it's sharing energy.
+    val hcActiveKcalPermissionLauncher = rememberLauncherForActivityResult(
+        PermissionController.createRequestPermissionResultContract(),
+    ) { granted ->
+        if (granted.containsAll(HealthConnectWriter.ACTIVE_CALORIES_PERMISSIONS)) {
+            vm.writebackHealthConnectNow()
+        } else {
+            vm.setHcWriteActiveKcal(false)
+            Toast.makeText(context, "Active-calories write access not granted.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun startActiveKcalWriteback() {
+        scope.launch {
+            val granted = runCatching {
+                HealthConnectImporter.client(context).permissionController.getGrantedPermissions()
+            }.getOrDefault(emptySet())
+            if (granted.containsAll(HealthConnectWriter.ACTIVE_CALORIES_PERMISSIONS)) {
+                vm.writebackHealthConnectNow()
+            } else {
+                hcActiveKcalPermissionLauncher.launch(HealthConnectWriter.ACTIVE_CALORIES_PERMISSIONS)
             }
         }
     }
@@ -514,7 +547,7 @@ fun DataSourcesScreen(vm: AppViewModel) {
                         Text(uiString(R.string.l10n_data_sources_screen_share_back_to_health_connect_1d578f4a), style = NoopType.subhead, color = Palette.textPrimary)
                         Text(
                             uiString(R.string.l10n_data_sources_screen_write_the_metrics_noop_computes_from_439940c2) +
-                                "respiratory rate, heart rate, steps, active energy and sleep) into " +
+                                "respiratory rate, heart rate, workouts and sleep) into " +
                                 "Health Connect so other apps can use them. Only NOOP's own values are " +
                                 "shared. Imported data is never echoed back.",
                             style = NoopType.footnote,
@@ -539,6 +572,44 @@ fun DataSourcesScreen(vm: AppViewModel) {
                             contentDescription = uiString(R.string.l10n_data_sources_screen_share_computed_metrics_back_to_health_c11f5d70)
                         },
                     )
+                }
+                // Opt-in EXTRA (only while writeback is on): also share NOOP's on-device active-energy
+                // estimate. Off by default because it double-counts if a phone/watch already writes
+                // active calories — tick it only if nothing else feeds Health Connect that metric.
+                if (hcWriteback) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { // whole-row tap toggles, matching the checkbox
+                                val on = !hcWriteActiveKcal
+                                vm.setHcWriteActiveKcal(on)
+                                if (on) startActiveKcalWriteback()
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Checkbox(
+                            checked = hcWriteActiveKcal,
+                            onCheckedChange = { on ->
+                                vm.setHcWriteActiveKcal(on)
+                                if (on) startActiveKcalWriteback()
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = Palette.accent,
+                                uncheckedColor = Palette.hairline,
+                                checkmarkColor = Palette.surfaceBase,
+                            ),
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Also share active calories", style = NoopType.subhead, color = Palette.textPrimary)
+                            Text(
+                                "Only turn this on if no other app (phone or watch) already writes active " +
+                                    "energy to Health Connect — otherwise your daily total will double-count.",
+                                style = NoopType.footnote,
+                                color = Palette.textTertiary,
+                            )
+                        }
+                    }
                 }
                 // #660: surface the last writeback OUTCOME so a silently-failing share (revoked
                 // permission, provider error) is visible instead of a healthy-looking toggle. Only

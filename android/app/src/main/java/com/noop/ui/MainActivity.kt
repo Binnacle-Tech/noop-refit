@@ -417,6 +417,20 @@ object NoopPrefs {
         of(context).edit().putBoolean(KEY_HC_WRITEBACK, enabled).apply()
     }
 
+    /** Opt-in EXTRA to [KEY_HC_WRITEBACK]: also write NOOP's on-device active-energy estimate as an
+     *  ActiveCaloriesBurnedRecord. Default OFF and deliberately separate — the strap figure is an
+     *  HR-derived estimate, so it's only wanted when NO phone pedometer / watch already feeds Health
+     *  Connect active calories (otherwise it double-counts the OS daily total, which is why steps +
+     *  energy are excluded from the base writeback). Gated per-concern in [HealthConnectWriter.write]. */
+    const val KEY_HC_WRITE_ACTIVE_KCAL = "noop.hcWriteActiveKcal"
+
+    fun hcWriteActiveKcal(context: Context): Boolean =
+        of(context).getBoolean(KEY_HC_WRITE_ACTIVE_KCAL, false)
+
+    fun setHcWriteActiveKcal(context: Context, enabled: Boolean) {
+        of(context).edit().putBoolean(KEY_HC_WRITE_ACTIVE_KCAL, enabled).apply()
+    }
+
     /** Last writeback OUTCOME (#660) — surfaced in Data Sources so a silently-failing share (revoked
      *  permission, provider error) is visible instead of a healthy-looking toggle. [KEY_HC_WB_STATUS]
      *  holds a PII-safe category ([HC_WB_OK] / [HC_WB_PERMISSION_DENIED] / [HC_WB_REMOTE_ERROR]); "" = never. */

@@ -3,6 +3,7 @@ package com.noop.ingest
 import android.content.Context
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
@@ -13,8 +14,10 @@ import androidx.health.connect.client.records.RespiratoryRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.metadata.Metadata
+import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Percentage
+import com.noop.analytics.WorkoutSport
 import com.noop.data.WhoopRepository
 import com.noop.data.WorkoutRow
 import com.noop.ui.NoopPrefs
@@ -91,7 +94,8 @@ object HealthConnectWriter {
      * Write the last [WINDOW_DAYS] of computed metrics. Returns a [WritebackResult] — the record
      * count PLUS any per-concern failure categories, so a revoked permission no longer looks like a
      * benign "wrote 0" (#660). Persists the outcome via [recordStatus] for the Data Sources UI.
-     * Assumes [PERMISSIONS] are granted (HC throws SecurityException otherwise — caught + categorized).
+     * Assumes [PERMISSIONS] + [EXERCISE_PERMISSIONS] are granted (HC throws SecurityException otherwise
+     * — caught + categorized per-concern, so a missing exercise grant can't suppress the vitals write).
      *
      * [deviceId] must be the registry's ACTIVE strap id (SPINE / #814): a wizard-paired strap banks
      * rows under `whoop-<address>`, so a hardcoded legacy "my-whoop" id reads empty tables and
@@ -153,11 +157,13 @@ object HealthConnectWriter {
             }
         }
 
-        // NOTE: steps + active-calories are deliberately NOT written back (was #528). NOOP's strap
+        // NOTE: steps + active-calories are NOT written back by default (was #528). NOOP's strap
         // step/kcal figures are estimates, and the phone pedometer / a watch already feed Health
         // Connect the authoritative values — writing ours too would double-count in the OS's daily
-        // totals. iOS (#249) excludes them for the same reason; this keeps the two platforms aligned.
-        // The unique strap signals (vitals, HR, sleep, workouts) are still written below.
+        // totals. iOS (#249) excludes them for the same reason. EXCEPTION: active energy is available
+        // as an explicit opt-in ([NoopPrefs.hcWriteActiveKcal], gated below) for strap-only users who
+        // have NOTHING else feeding HC active calories, where there's no double-count to avoid.
+        // The unique strap signals (vitals, HR, sleep, workouts) are always written below.
 
         // Each export concern inserts independently so a failure in one — e.g. a revoked per-type WRITE
         // permission — can't suppress the others. Failures are CATEGORIZED (PII-safe, never raw messages)
@@ -172,6 +178,15 @@ object HealthConnectWriter {
             .fold({ total += it }, { failures += it.writebackCategory() })
         runCatching { writeSleep(client, repo, deviceId) }
             .fold({ total += it }, { failures += it.writebackCategory() })
+        runCatching { writeWorkouts(client, repo, deviceId) }
+            .fold({ total += it }, { failures += it.writebackCategory() })
+        // Opt-in active-energy share (own concern + own WRITE permission, so a missing grant is
+        // categorized independently and can't suppress the vitals write). OFF unless the user ticked it
+        // in Data Sources — only useful when nothing else feeds HC active calories (else double-counts).
+        if (NoopPrefs.hcWriteActiveKcal(context)) {
+            runCatching { writeActiveCalories(client, days, zone, version) }
+                .fold({ total += it }, { failures += it.writebackCategory() })
+        }
         val result = WritebackResult(total, failures.distinct())
         recordStatus(context, result)
         return result
@@ -290,6 +305,67 @@ object HealthConnectWriter {
                     recordIdsList = emptyList(), clientRecordIdsList = absorbed)
             }
         }
+        return insertChunked(client, records)
+    }
+
+    /**
+     * Batch workout writeback: export every finalized strap/manual workout in the last [WINDOW_DAYS]
+     * as an [ExerciseSessionRecord] (+ Distance), so imported/offloaded and PAST sessions reach Health
+     * Connect too — not only the single live session [writeExercise] pushes at its own end. This closes
+     * the gap where a user who never records live in-app still saw an empty Activity category in HC.
+     *
+     * Scope mirrors the vitals/HR limits: reads [WhoopRepository.workoutsUnion] — the active strap id +
+     * canonical "my-whoop" (#814) — which deliberately EXCLUDES the `health-connect` / `apple-health`
+     * source ids, so a workout another app already put in HC is never echoed back (no loop/dupe). Manual
+     * + live sessions land under the strap id (source="manual"), so they're covered here and simply
+     * re-upsert the [writeExercise] record: the SAME `noop-workout-<startTs>` clientRecordId makes it
+     * idempotent. Finalized only (`endTs in (startTs, now]`) so an open session is never exported.
+     */
+    private suspend fun writeWorkouts(client: HealthConnectClient, repo: WhoopRepository, deviceId: String): Int {
+        val now = System.currentTimeMillis() / 1000
+        val floor = now - WINDOW_DAYS * 86_400
+        val rows = repo.workoutsUnion(deviceId, from = floor, to = now)
+            .filter { it.endTs > it.startTs && it.endTs <= now }
+        if (rows.isEmpty()) return 0
+        val records = rows.flatMap { buildExerciseRecords(it, WorkoutSport.exerciseTypeForName(it.sport)) }
+        return insertChunked(client, records)
+    }
+
+    /** WRITE permission for the opt-in active-energy share; requested only when the user ticks the box. */
+    val ACTIVE_CALORIES_PERMISSIONS: Set<String> =
+        setOf(HealthPermission.getWritePermission(ActiveCaloriesBurnedRecord::class))
+
+    /**
+     * Opt-in active-energy writeback: one whole-day [ActiveCaloriesBurnedRecord] per computed day that
+     * has a real estimate. [days] and [zone]/[version] are the batch the caller already assembled for
+     * vitals, so this reuses the same computed-days scope (never imported ones) and version stamp. The
+     * record spans local midnight→next midnight so it lands on the right calendar day across DST; the
+     * `noop-activekcal-<day>` clientRecordId upserts on recompute. Its own concern (own permission) so a
+     * missing WRITE_ACTIVE_CALORIES grant is categorized without suppressing the vitals write.
+     */
+    private suspend fun writeActiveCalories(
+        client: HealthConnectClient, days: List<com.noop.data.DailyMetric>, zone: ZoneId, version: Long,
+    ): Int {
+        val plans = HealthExportPlan.activeCalories(days.map { HealthExportPlan.ActiveKcalInput(it.day, it.activeKcalEst) })
+        if (plans.isEmpty()) return 0
+        val now = Instant.now()
+        val records = ArrayList<Record>(plans.size)
+        for (p in plans) {
+            val date = runCatching { LocalDate.parse(p.day) }.getOrNull() ?: continue
+            val start = date.atStartOfDay(zone)
+            val startInstant = start.toInstant()
+            // Clamp the interval end to now: the CURRENT day's window is still open, and Health Connect
+            // rejects a future-ended record — a partial day exports as midnight→now, not a full future day.
+            val endInstant = minOf(date.plusDays(1).atStartOfDay(zone).toInstant(), now)
+            if (!endInstant.isAfter(startInstant)) continue // day entirely in the future / clock skew
+            records.add(ActiveCaloriesBurnedRecord(
+                startTime = startInstant, startZoneOffset = start.offset,
+                endTime = endInstant, endZoneOffset = zone.rules.getOffset(endInstant),
+                energy = Energy.kilocalories(p.kcal),
+                metadata = meta("activekcal", p.day, version),
+            ))
+        }
+        if (records.isEmpty()) return 0
         return insertChunked(client, records)
     }
 
