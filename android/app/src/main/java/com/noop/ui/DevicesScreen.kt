@@ -808,7 +808,7 @@ private fun WhoopFirstFooter() {
         )
         Text(
             uiString(R.string.l10n_devices_screen_whoop_is_noop_s_primary_fully_1c9e67fd) +
-                "in-development addition: they stream live heart rate and HRV, but not WHOOP's deeper " +
+                " in-development addition: they stream live heart rate and HRV, but not WHOOP's deeper " +
                 "sleep and recovery data.",
             style = NoopType.footnote,
             color = Palette.textTertiary,
@@ -1086,7 +1086,7 @@ private fun PickActiveDialog(
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     uiString(R.string.l10n_devices_screen_you_removed_your_active_strap_choose_2ac91d48) +
-                        "leave none active and pair one later.",
+                        " leave none active and pair one later.",
                     style = NoopType.subhead,
                     color = Palette.textSecondary,
                 )
@@ -1318,7 +1318,7 @@ private fun OuraLocalStateNote() {
         Icon(Icons.Filled.Info, contentDescription = null, tint = Palette.statusWarning, modifier = Modifier.size(14.dp))
         Text(
             uiString(R.string.l10n_devices_screen_paired_locally_noop_owns_this_ring_30c16190) +
-                "up in the Oura app, NOOP no longer owns it and you would re-add it to take it over.",
+                " up in the Oura app, NOOP no longer owns it and you would re-add it to take it over.",
             style = NoopType.caption,
             color = Palette.statusWarning,
         )

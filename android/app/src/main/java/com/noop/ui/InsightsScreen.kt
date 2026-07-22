@@ -577,7 +577,7 @@ private fun WhatMovesYouLink(onOpen: () -> Unit) {
                 Overline("What moves you ›", color = Palette.textPrimary)
                 Text(
                     uiString(R.string.l10n_insights_screen_ranked_lag_aware_which_of_your_e0e91b39) +
-                        "personal alcohol/caffeine dose-response.",
+                        " personal alcohol/caffeine dose-response.",
                     style = NoopType.footnote,
                     color = Palette.textTertiary,
                 )
@@ -992,7 +992,7 @@ private fun ExperimentSetupCard(
                 Spacer(Modifier.height(4.dp))
                 Text(
                     uiString(R.string.l10n_insights_screen_pick_one_behaviour_you_log_one_bd34090e) +
-                        "compares the days you log the behaviour against your behaviour-free " +
+                        " compares the days you log the behaviour against your behaviour-free " +
                         "days before the start.",
                     style = NoopType.subhead,
                     color = Palette.textSecondary,

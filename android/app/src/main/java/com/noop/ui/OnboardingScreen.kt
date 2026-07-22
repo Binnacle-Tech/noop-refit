@@ -605,7 +605,7 @@ private fun ConnectStep(viewModel: AppViewModel) {
             if (!live.bonded) {
                 Text(
                     uiString(R.string.l10n_onboarding_screen_no_whoop_you_can_still_continue_ec58d88d) +
-                        "or a gym machine under Devices, or import from WHOOP, Apple Health, Oura, Fitbit, Garmin " +
+                        " or a gym machine under Devices, or import from WHOOP, Apple Health, Oura, Fitbit, Garmin " +
                         "and more under Data Sources. You can do either any time.",
                     style = NoopType.footnote,
                     color = Palette.textTertiary,

@@ -130,7 +130,7 @@ private fun IntroCard() {
             Text(uiString(R.string.l10n_whoop_model_comparison_screen_both_straps_are_supported_8545557a), style = NoopType.headline, color = Palette.textPrimary)
             Text(
                 uiString(R.string.l10n_whoop_model_comparison_screen_noop_pairs_with_the_whoop_4_599b088c) +
-                    "heart rate, your scores, buzzing the strap), but a few firmware features differ. Here's " +
+                    " heart rate, your scores, buzzing the strap), but a few firmware features differ. Here's " +
                     "what each can do, and why.",
                 style = NoopType.subhead,
                 color = Palette.textSecondary,

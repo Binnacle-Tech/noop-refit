@@ -277,7 +277,7 @@ private fun IntroCard() {
             Overline("The three scores")
             Text(
                 uiString(R.string.l10n_scoring_guide_screen_noop_gives_you_three_daily_scores_36244209) +
-                    "scale. They're built from your strap's raw signals using published, " +
+                    " scale. They're built from your strap's raw signals using published, " +
                     "peer-reviewed sport science, and computed entirely on your device. They are " +
                     "NOT WHOOP's scores: we don't have WHOOP's private algorithms and don't pretend " +
                     "to. They aim at the same three questions using open science, so they'll usually " +
@@ -436,7 +436,7 @@ private fun ConfidenceCard() {
             }
             Text(
                 uiString(R.string.l10n_scoring_guide_screen_every_score_carries_a_small_honesty_e5b722eb) +
-                    "learning your baseline, or doesn't have enough data yet. Building means there's " +
+                    " learning your baseline, or doesn't have enough data yet. Building means there's " +
                     "enough to show, but it's thin. Solid means full inputs are present. When NOOP " +
                     "can't compute a score honestly, it shows nothing rather than a fake number.",
                 style = NoopType.subhead,
@@ -452,7 +452,7 @@ private fun ConfidenceCard() {
 private fun FooterNote() {
     Text(
         uiString(R.string.l10n_scoring_guide_screen_these_are_independent_approximations_from_a_301457ed) +
-            "medical advice, and not WHOOP's official scores.",
+            " medical advice, and not WHOOP's official scores.",
         style = NoopType.footnote,
         color = Palette.textTertiary,
         modifier = Modifier

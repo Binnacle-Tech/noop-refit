@@ -1402,7 +1402,7 @@ fun TodayScreen(
                                     )
                                     Text(
                                         uiString(R.string.l10n_today_screen_no_cardio_load_yet_effort_builds_e952006c) +
-                                            "zone (around 50% of your heart-rate reserve). A calm day honestly reads near zero.",
+                                            " zone (around 50% of your heart-rate reserve). A calm day honestly reads near zero.",
                                         style = NoopType.footnote,
                                         color = Palette.textTertiary,
                                     )
@@ -4058,7 +4058,7 @@ private fun RecoveryDriversSection(
                 drivers.forEach { DriverRow(it) }
                 Text(
                     uiString(R.string.l10n_today_screen_each_line_is_how_many_points_dec2c062) +
-                        "on-device baseline. Approximate, not medical advice.",
+                        " on-device baseline. Approximate, not medical advice.",
                     style = NoopType.footnote,
                     color = Palette.textTertiary,
                 )
@@ -4186,7 +4186,7 @@ private fun RecoveryContributorsSection(day: DailyMetric?, carriedDay: DailyMetr
             )
             Text(
                 uiString(R.string.l10n_today_screen_baselines_learned_on_device_over_14_359f6812) +
-                    "signal against a typical adult range, not medical advice.",
+                    " signal against a typical adult range, not medical advice.",
                 style = NoopType.footnote,
                 color = Palette.textTertiary,
             )

@@ -308,7 +308,7 @@ fun HrvSnapshotScreen(
                 Overline("How this is measured")
                 Text(
                     uiString(R.string.l10n_hrv_snapshot_screen_a_60_second_snapshot_of_your_35f03f7c) +
-                        "(range and ectopic-beat filtering) before computing RMSSD the same way your " +
+                        " (range and ectopic-beat filtering) before computing RMSSD the same way your " +
                         "overnight HRV is computed.",
                     style = NoopType.footnote, color = Palette.textTertiary,
                 )
@@ -464,7 +464,7 @@ private fun NotBondedHint() {
         Icon(Icons.Filled.MonitorHeart, contentDescription = null, tint = Palette.statusWarning)
         Text(
             uiString(R.string.l10n_hrv_snapshot_screen_an_hrv_reading_needs_the_live_11b70bff) +
-                "then come back.",
+                " then come back.",
             style = NoopType.footnote, color = Palette.textSecondary,
         )
     }
