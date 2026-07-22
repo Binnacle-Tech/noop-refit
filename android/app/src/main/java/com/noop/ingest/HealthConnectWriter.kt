@@ -52,9 +52,12 @@ data class WritebackResult(val written: Int, val failures: List<WritebackFailure
     }
 }
 
-/** Map a thrown write error to a PII-safe category; rethrow coroutine cancellation (never a "failure"). */
+/** Map a thrown write error to a PII-safe category; rethrow coroutine cancellation (never a "failure").
+ *  Binnacle fork: the raw throwable is logged to LOCAL logcat (tag NoopHC) so a failing concern is
+ *  diagnosable via `adb logcat -s NoopHC` — the UI/persisted status stays category-only (PII-safe). */
 private fun Throwable.writebackCategory(): WritebackFailure {
     if (this is kotlin.coroutines.cancellation.CancellationException) throw this
+    android.util.Log.w("NoopHC", "writeback failure", this)
     return if (this is SecurityException) WritebackFailure.PERMISSION_DENIED else WritebackFailure.REMOTE_ERROR
 }
 
