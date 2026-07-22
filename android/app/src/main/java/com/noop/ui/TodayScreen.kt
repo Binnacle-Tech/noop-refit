@@ -2422,8 +2422,14 @@ private fun ScoreHeroRow(
         ) {
             // iOS parity (TodayView.scoreHeroRow): three EQUAL rings in CHARGE · EFFORT · REST order, no
             // enlarged centre, filling the width as one balanced row. Ring stroke 0.10 (WHOOP weight).
+            // Size the three vessels to ACTUALLY FIT the measured width: 3 rings + 2 gaps == maxWidth
+            // exactly at the divisor of 3. The old /3.1 with a 90dp FLOOR overflowed on narrow/high-
+            // density Android screens (a Mac/iPad-width assumption) — three 90dp vessels + gaps exceeded
+            // the row, clipping REST off the right ("R…"). The signature element must never clip
+            // (§06/§15): rings shrink to fit first, capped at 112dp on wide screens, floor only low
+            // enough to stay legible.
             val ringGap = 14.dp
-            val ring = ((maxWidth - ringGap * 2) / 3.1f).coerceIn(90.dp, 112.dp)
+            val ring = ((maxWidth - ringGap * 2) / 3f).coerceIn(72.dp, 112.dp)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(ringGap, Alignment.CenterHorizontally),
@@ -2706,16 +2712,19 @@ private fun SynthesisHeroCard(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // The greeting yields/ellipsises first; the pill keeps its full width (#527).
+            // The greeting yields/ellipsises first; the pills keep their full width (#527). It takes a
+            // SINGLE fill weight so it expands to all the space the pills don't need and pushes them to
+            // the trailing edge — the old `weight(1f, fill=false)` + a separate `Spacer(weight(1f))`
+            // split the row in half, capping the greeting at ~50% and truncating "Good evening" even
+            // with room to spare (a desktop-width assumption).
             Text(
                 greetingWord(),
                 style = NoopType.subhead,
                 color = Palette.textSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false),
+                modifier = Modifier.weight(1f),
             )
-            Spacer(Modifier.weight(1f))
             // S4 (#205): the one-word readiness read kept on the hero now the full Readiness card folded
             // into the Charge-ring tap. Push / Maintain / Rest; hidden when there isn't enough history.
             // Tapping it opens the Charge breakdown, where the full Readiness card now lives.
@@ -5059,7 +5068,10 @@ private fun LiquidKeyTile(
                 data.label.uppercase(),
                 style = NoopType.overline.copy(fontSize = 9.sp, letterSpacing = 1.2.sp),
                 color = Palette.textTertiary,
-                maxLines = 1,
+                // A long metric name ("BLOOD OXYGEN", "RESPIRATORY") is primary content on its tile —
+                // it may take a second line rather than truncate to "BLOOD OX…". Two lines is the ceiling
+                // (§15: the label never degrades; the layout does).
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
         }
