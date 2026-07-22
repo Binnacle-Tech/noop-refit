@@ -815,6 +815,7 @@ private fun SummarySection(
                 value = modal?.sport ?: "–",
                 caption = modal?.let { "${it.count} session${if (it.count == 1) "" else "s"}" },
                 accent = Palette.textPrimary,
+                valueMaxLines = 2,   // a sport name ("Manual Labor") wraps instead of truncating
             )
         },
     )

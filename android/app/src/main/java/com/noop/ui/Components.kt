@@ -474,7 +474,11 @@ internal fun AutoSizeValue(
     style: TextStyle,
     color: Color,
     modifier: Modifier = Modifier,
-    minScale: Float = 0.6f,
+    minScale: Float = 0.5f,
+    // A text value (a sport name like "Manual Labor") can't shrink enough to fit one line and used to
+    // truncate to "Manual…". Allowing two lines lets such values wrap; numeric values stay one line
+    // (they're short) and just shrink. Height-bearing callers should use heightIn(min) to grow.
+    maxLines: Int = 1,
 ) {
     var scale by remember(text, style) { mutableStateOf(1f) }
     Text(
@@ -482,12 +486,12 @@ internal fun AutoSizeValue(
         color = color,
         style = style,
         fontSize = style.fontSize * scale,
-        maxLines = 1,
-        softWrap = false,
+        maxLines = maxLines,
+        softWrap = maxLines > 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier,
         onTextLayout = { result ->
-            if (result.didOverflowWidth && scale > minScale) {
+            if ((result.didOverflowWidth || result.didOverflowHeight) && scale > minScale) {
                 scale = maxOf(minScale, scale - 0.08f)
             }
         },
@@ -509,10 +513,14 @@ fun StatTile(
     // "+10 vs base") would otherwise starve the reading column and clip its value. The default
     // keeps callers that have enough width exactly as they were.
     compactDelta: Boolean = false,
+    // A text value (a sport name) may take two lines rather than truncate; the tile grows to fit.
+    // Numeric tiles leave this at 1 and simply shrink.
+    valueMaxLines: Int = 1,
 ) {
     // Each tile borrows its accent as a faint card wash, so a metric reads as part of its
     // colour world while staying legible on the deep blue-black. Falls back to the accent.
-    NoopCard(modifier = modifier.height(Metrics.tileHeight), padding = 14.dp, tint = tint ?: accent) {
+    // heightIn(min) not a fixed height: a wrapped two-line value grows the tile instead of clipping.
+    NoopCard(modifier = modifier.heightIn(min = Metrics.tileHeight), padding = 14.dp, tint = tint ?: accent) {
         Column {
             Overline(label)
             Spacer(Modifier.weight(1f))
@@ -520,13 +528,14 @@ fun StatTile(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Value takes priority width and SHRINKS to fit (down to 0.6×) rather than
-                // truncating to "1…", matching the Swift tile's minimumScaleFactor (#319/#332).
-                // The chip keeps its intrinsic size at the end.
+                // Value takes priority width and SHRINKS to fit rather than truncating to "1…",
+                // matching the Swift tile's minimumScaleFactor (#319/#332). The chip keeps its
+                // intrinsic size at the end.
                 AutoSizeValue(
                     value,
                     style = NoopType.number(26f),
                     color = accent,
+                    maxLines = valueMaxLines,
                     modifier = Modifier.weight(1f),
                 )
                 if (delta != null) {
