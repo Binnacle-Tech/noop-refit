@@ -164,3 +164,55 @@ Resolve the 5 decisions and I'll turn any phase into concrete edits.
   ("switch means immediate"); it applies on flip like the sharing toggle above it.
 - **§04/§05/§14** — layout grammar, component kit, loading/empty/error idioms: NOOP's own,
   unaudited against the doc.
+
+---
+
+# Voice compliance audit — 2026-07-21 (Part III §08 writing, §09 naming)
+
+Scope: ~1,666 string resources plus inline copy. The app is a heavy-text product, so Voice
+matters as much as the visual layer. Overall it is **strong** on tone and weak on two structural
+points. "Pinnacle of Binnacle" = close both.
+
+## Already Binnacle-compliant (credit where due)
+- **Errors say the fix, don't apologise** (§08). "…not found on PATH — Locate it, or get it ↗"
+  is the rule; NOOP matches it ("Turn on … to see the clean beats", permission lines that link
+  to the fix). No "Oops/Sorry/Something went wrong" anywhere.
+- **Empty states invite action** (§08). "Add a reading", "Sync your strap to begin" — no
+  mood-setting "Nothing here yet".
+- **Plain, active, user-framed** (§08). "All your data, none of the cloud." "Read in two
+  seconds." Controls say what happens ("Re-scan", "Back up now", "Start session").
+- **Naming register** (§09). Lab Book, Test Centre, Deep Timeline, Live Body Console, Signal
+  Trust — real terms with a working second meaning; no costume-pirate.
+
+## Finding 1 — split strings (FIXED spacing; architecture remains). Severity: high
+65 user sentences were split across a localized `R.string` + a hardcoded English tail. aapt
+strips a resource's trailing whitespace, so the seam glued ("Theyare informational",
+"numbersyou enter", "keepingthe latest", "current data,so back up"). Spacing fixed this pass.
+BUT the deeper violation stands: the hardcoded tail is **not localized** (the de/es/fr/zh
+values only cover the resource half), and it splits one message across two elements (§08 "each
+element does one job"). Remediation: fold each tail back into its string resource as one value.
+
+## Finding 2 — capitalization inconsistency. Severity: medium (pervasive)
+§08 is "sentence case everywhere", with proper-noun **names** the only exception (§09). NOOP
+mixes the two for the SAME class of thing:
+- Descriptive labels in Title Case that should be sentence case: "Blood Oxygen", "Vital Signs",
+  "Heart Rate", "Resting Heart Rate", "Respiratory Rate", "Skin Temperature", "Sleep
+  Efficiency", "Sleep Debt", "Recovery Trend", "Total Workouts/Time/Distance/Calories", "Most
+  Active", "Signal Trust" (arguable). → "Blood oxygen", "Vital signs", "Heart rate", …
+- Correctly keep Title Case (proper-noun feature names / real products): Lab Book, Test Centre,
+  Deep Timeline, Live Body Console, Apple Health, Xiaomi Mi Band, WHOOP, Bluetooth.
+Nuance: many labels render through `Overline`, which `.uppercase()`s them — there the source
+case is invisible, so fix only the ones shown as titles/headlines/tiles. Remediation: a
+capitalization pass that (a) sentence-cases descriptive labels, (b) leaves the fleet names and
+real products, (c) ignores overline-only strings.
+
+## Finding 3 — implementation terms in user copy. Severity: low
+"Android runs this via WorkManager (Doze may delay it)", "type-0x2F historical-offload
+frame(s)". §08 says name by what the user controls, not how it's built. MOST of these live in
+Test Centre / diagnostics, where Helm 4 ("show the work") licenses them — acceptable. Only
+audit ones that reach mainstream screens; leave the diagnostics copy technical on purpose.
+
+## Suggested order
+Finding 2 (capitalization) is the most visible and is mechanical-ish — do it first, screen by
+screen. Finding 1 (re-fold tails into resources) is higher-value for correctness/i18n but
+touches 60+ strings + their translations — do it as a dedicated pass. Finding 3 is opt-in.
