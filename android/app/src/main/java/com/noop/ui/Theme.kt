@@ -53,7 +53,10 @@ object Palette {
 
     // Chart style — when CLASSIC, the DATA accessors below return the throwback red→green ramps
     // (light/dark tuned). Reads ChartStylePrefs.style (snapshot state) so a flip re-colours live.
-    val isClassic: Boolean get() = ChartStylePrefs.style == ChartStyle.CLASSIC
+    // Binnacle fork: Classic is a rainbow encoding, which the Binnacle skin's purist lightness
+    // ramps exist to replace — so while the Binnacle skin is active, Classic yields (the pref is
+    // preserved and applies again when the skin returns to stock; the selector hides meanwhile).
+    val isClassic: Boolean get() = ChartStylePrefs.style == ChartStyle.CLASSIC && SkinPrefs.skin == UiSkin.STOCK
     private val classic: ClassicRamp get() = if (isLight) ClassicLight else ClassicDark
 
     // Surfaces.

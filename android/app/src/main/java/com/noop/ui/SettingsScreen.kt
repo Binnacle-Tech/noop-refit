@@ -1002,20 +1002,26 @@ fun SettingsScreen(
                     },
                 )
             }
-            RowDivider()   // #79 parity: the hairline every other section has between FormRows (Android rows
-                           // were already 16dp-spaced, unlike iOS where they touched — this matches both)
-            FormRow(label = uiString(R.string.l10n_settings_screen_chart_colours_525f4a37)) {
-                // Titanium = brand gold/amber/blue ramps; Classic = throwback red→green readiness scale
-                // (cool→hot zones, green→red stress). Re-colours every gauge/chart, in both schemes.
-                SegmentedPillControl(
-                    items = listOf(ChartStyle.TITANIUM, ChartStyle.CLASSIC),
-                    selection = chartStyle,
-                    label = { it.label },
-                    onSelect = { style ->
-                        chartStyle = style
-                        ChartStylePrefs.set(context, style)
-                    },
-                )
+            // Binnacle fork: the Chart-colours choice only applies on the stock skin — both Titanium
+            // and Classic are rainbow encodings the Binnacle purist ramps replace (Palette.isClassic
+            // yields while Binnacle is active). Hide the row rather than show a dead control; the
+            // saved pref survives and applies again when the skin returns to Noop.
+            if (uiSkin == UiSkin.STOCK) {
+                RowDivider()   // #79 parity: the hairline every other section has between FormRows (Android rows
+                               // were already 16dp-spaced, unlike iOS where they touched — this matches both)
+                FormRow(label = uiString(R.string.l10n_settings_screen_chart_colours_525f4a37)) {
+                    // Titanium = brand gold/amber/blue ramps; Classic = throwback red→green readiness scale
+                    // (cool→hot zones, green→red stress). Re-colours every gauge/chart, in both schemes.
+                    SegmentedPillControl(
+                        items = listOf(ChartStyle.TITANIUM, ChartStyle.CLASSIC),
+                        selection = chartStyle,
+                        label = { it.label },
+                        onSelect = { style ->
+                            chartStyle = style
+                            ChartStylePrefs.set(context, style)
+                        },
+                    )
+                }
             }
             RowDivider()
             // Trend chart style (line vs bar). Display-only: flips the Trends tab's charts between the
