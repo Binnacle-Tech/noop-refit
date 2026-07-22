@@ -23,8 +23,10 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import com.noop.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -431,15 +433,33 @@ object Metrics {
 // values don't reflow; Monospace is reserved for the `mono` raw/log style only.
 
 object NoopType {
-    // Helvetica Neue family — falls back to the platform grotesque (SansSerif) when
-    // no res/font/helvetica_neue asset is bundled, per the v3 type spec.
-    private val sans = FontFamily.SansSerif
-    private val monoFamily = FontFamily.Monospace
+    // Binnacle fork: the three Binnacle faces (bundled in res/font), used when the Binnacle skin
+    // is active. Display = Space Grotesk (headers, hero numbers); UI = Inter; Data = IBM Plex Mono.
+    private val binnacleDisplay = FontFamily(
+        Font(R.font.space_grotesk_semibold, FontWeight.SemiBold),
+        Font(R.font.space_grotesk_bold, FontWeight.Bold),
+    )
+    private val binnacleUi = FontFamily(
+        Font(R.font.inter_regular, FontWeight.Normal),
+        Font(R.font.inter_medium, FontWeight.Medium),
+        Font(R.font.inter_semibold, FontWeight.SemiBold),
+        Font(R.font.inter_bold, FontWeight.Bold),
+    )
+    private val binnacleMono = FontFamily(
+        Font(R.font.ibm_plex_mono_regular, FontWeight.Normal),
+        Font(R.font.ibm_plex_mono_medium, FontWeight.Medium),
+    )
+
+    // Skin-reactive faces (SkinPrefs.skin is snapshot state, so styles re-resolve on toggle).
+    // Stock: platform grotesque + platform mono, exactly as before.
+    private val sans get() = if (SkinPrefs.skin == UiSkin.BINNACLE) binnacleUi else FontFamily.SansSerif
+    private val displayFace get() = if (SkinPrefs.skin == UiSkin.BINNACLE) binnacleDisplay else FontFamily.SansSerif
+    private val monoFamily get() = if (SkinPrefs.skin == UiSkin.BINNACLE) binnacleMono else FontFamily.Monospace
 
     /** Display 64–80 / Bold — the recovery ring number. Tight tracking (≈ -0.04em),
      *  tabular figures so a changing value never reflows. Mirrors StrandFont.display. */
     fun display(size: Float = 72f) = TextStyle(
-        fontFamily = sans, fontWeight = FontWeight.Bold, fontSize = size.sp,
+        fontFamily = displayFace, fontWeight = FontWeight.Bold, fontSize = size.sp,
         letterSpacing = displayTracking(size).sp, fontFeatureSettings = "tnum",
     )
 
@@ -447,22 +467,24 @@ object NoopType {
      *  display(); exposed to mirror StrandFont.displayTracking. */
     fun displayTracking(size: Float = 72f): Float = -size * 0.04f
 
-    val title1 = TextStyle(fontFamily = sans, fontWeight = FontWeight.Bold, fontSize = 28.sp)
-    val title2 = TextStyle(fontFamily = sans, fontWeight = FontWeight.SemiBold, fontSize = 22.sp)
-    val headline = TextStyle(fontFamily = sans, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
-    val body = TextStyle(fontFamily = sans, fontWeight = FontWeight.Normal, fontSize = 15.sp)
-    val subhead = TextStyle(fontFamily = sans, fontWeight = FontWeight.Normal, fontSize = 13.sp)
-    val caption = TextStyle(fontFamily = sans, fontWeight = FontWeight.Normal, fontSize = 12.sp)
-    val footnote = TextStyle(fontFamily = sans, fontWeight = FontWeight.Normal, fontSize = 11.sp)
+    // Skin-reactive styles: getters (not vals) so a skin flip rebuilds them with the right faces.
+    // Binnacle mapping — display face for titles/headers, UI face for body, mono for machine data.
+    val title1 get() = TextStyle(fontFamily = displayFace, fontWeight = FontWeight.Bold, fontSize = 28.sp)
+    val title2 get() = TextStyle(fontFamily = displayFace, fontWeight = FontWeight.SemiBold, fontSize = 22.sp)
+    val headline get() = TextStyle(fontFamily = sans, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
+    val body get() = TextStyle(fontFamily = sans, fontWeight = FontWeight.Normal, fontSize = 15.sp)
+    val subhead get() = TextStyle(fontFamily = sans, fontWeight = FontWeight.Normal, fontSize = 13.sp)
+    val caption get() = TextStyle(fontFamily = sans, fontWeight = FontWeight.Normal, fontSize = 12.sp)
+    val footnote get() = TextStyle(fontFamily = sans, fontWeight = FontWeight.Normal, fontSize = 11.sp)
 
     /** Overline 11 / Bold, +1.4 tracking, ALL-CAPS at use site. */
-    val overline = TextStyle(
+    val overline get() = TextStyle(
         fontFamily = sans, fontWeight = FontWeight.Bold, fontSize = 11.sp,
         letterSpacing = 1.4.sp,
     )
 
     /** Mono 13 — raw / log views. */
-    val mono = TextStyle(fontFamily = monoFamily, fontWeight = FontWeight.Normal, fontSize = 13.sp)
+    val mono get() = TextStyle(fontFamily = monoFamily, fontWeight = FontWeight.Normal, fontSize = 13.sp)
 
     /** A numeric style at an arbitrary size — the house sans with TABULAR figures
      *  ('tnum') so live values don't reflow. Mirrors StrandFont.number. */
@@ -474,13 +496,13 @@ object NoopType {
         fontFamily = monoFamily, fontWeight = weight, fontSize = size.sp,
     )
 
-    val bodyNumber = TextStyle(fontFamily = sans, fontWeight = FontWeight.Medium, fontSize = 15.sp, fontFeatureSettings = "tnum")
-    val captionNumber = TextStyle(fontFamily = sans, fontWeight = FontWeight.Medium, fontSize = 12.sp, fontFeatureSettings = "tnum")
-    val metricInline = number(15f)
-    val chartValue = number(18f)
-    val chartValueLarge = number(22f)
-    val tileValue = number(24f)
-    val tileValueLarge = number(26f)
+    val bodyNumber get() = TextStyle(fontFamily = sans, fontWeight = FontWeight.Medium, fontSize = 15.sp, fontFeatureSettings = "tnum")
+    val captionNumber get() = TextStyle(fontFamily = sans, fontWeight = FontWeight.Medium, fontSize = 12.sp, fontFeatureSettings = "tnum")
+    val metricInline get() = number(15f)
+    val chartValue get() = number(18f)
+    val chartValueLarge get() = number(22f)
+    val tileValue get() = number(24f)
+    val tileValueLarge get() = number(26f)
 
     const val overlineTracking = 1.4f
 }
@@ -512,7 +534,8 @@ private fun noopColorScheme(t: PaletteTokens, dark: Boolean): ColorScheme {
     )
 }
 
-private val NoopMaterialTypography = Typography(
+// Binnacle fork: getter (not val) so a skin flip rebuilds the Material typography with the new faces.
+private val NoopMaterialTypography get() = Typography(
     displayLarge = NoopType.display(72f),
     titleLarge = NoopType.title1,
     titleMedium = NoopType.title2,
@@ -546,7 +569,12 @@ fun NoopTheme(content: @Composable () -> Unit) {
         AppearanceMode.DARK -> true
         AppearanceMode.SYSTEM -> isSystemInDarkTheme()
     }
-    val tokens = if (dark) DarkTokens else LightTokens
+    // Binnacle fork: the skin (stock vs Binnacle) picks the token set; scheme picks dark/light.
+    // SkinPrefs.skin is snapshot state, so flipping the Settings toggle re-themes live.
+    val tokens = when (SkinPrefs.skin) {
+        UiSkin.BINNACLE -> if (dark) BinnacleDarkTokens else BinnacleLightTokens
+        UiSkin.STOCK -> if (dark) DarkTokens else LightTokens
+    }
     if (Palette.active !== tokens) Palette.active = tokens
 
     // Status-/nav-bar icon appearance: light icons on the dark theme, dark icons on the warm-paper

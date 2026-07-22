@@ -146,6 +146,102 @@ val LightTokens = PaletteTokens(
     tipCore = Color(0xFF241B06),
 )
 
+// MARK: - BINNACLE skin (Noop-Binnacle fork) — the house design language as a toggleable skin
+//
+// Binnacle (house design language): dark instrument surface, amber = now, cyan = good,
+// neutral = held, danger = stop — and PURIST data encoding: value reads by LIGHTNESS of one
+// hue, not by rainbow. Mapped into the frozen PaletteTokens API so all ~1,740 Palette.* reads
+// reskin with zero call-site changes. Toggled via [SkinPrefs] (Settings → Appearance), exactly
+// the ChartStylePrefs pattern. Stock tokens above are untouched.
+//
+// Ramp philosophy (purist): recovery/strain/zones = dark→bright AMBER lightness ramps ("more =
+// brighter"); sleep = CYAN lightness (deep = darkest) with AWAKE on neutral (different family =
+// "not asleep"); domains: Charge is the amber signature, Effort rides neutral, Rest rides cyan,
+// Stress is semantic calm(cyan)→now(amber)→stop(red-clay). statusWarning maps to amber (attention).
+
+val BinnacleDarkTokens = PaletteTokens(
+    surfaceBase = Color(0xFF0E1419), surfaceRaised = Color(0xFF151E27), surfaceOverlay = Color(0xFF1B2731),
+    surfaceInset = Color(0xFF101922), hairline = Color(0xFF26333E), hairlineStrong = Color(0xFF334353),
+    textPrimary = Color(0xFFE7EEF4), textSecondary = Color(0xFF93A4B2), textTertiary = Color(0xFF67798A),
+    glowAmbient = Color(0xFF3A2D0A),
+    accent = Color(0xFFE8A33D), accentHover = Color(0xFFF0C079), accentMuted = Color(0xFF2B2110), focusRing = Color(0xFFE8A33D),
+    recovery000 = Color(0xFF5C3E0A), recovery030 = Color(0xFF8A5D10), recovery055 = Color(0xFFB87F26),
+    recovery078 = Color(0xFFE8A33D), recovery100 = Color(0xFFF0C079),
+    strain000 = Color(0xFF6E4A0C), strain033 = Color(0xFF8A5D10), strain066 = Color(0xFFC2871F), strain100 = Color(0xFFF0C079),
+    sleepAwake = Color(0xFF8FA0AE), sleepLight = Color(0xFF5AD8CC), sleepDeep = Color(0xFF1F5751), sleepREM = Color(0xFF3AA69B),
+    zone1 = Color(0xFF6E4A0C), zone2 = Color(0xFF8A5D10), zone3 = Color(0xFFB87F26), zone4 = Color(0xFFE8A33D), zone5 = Color(0xFFF0C079),
+    statusPositive = Color(0xFF4FD1C5), statusWarning = Color(0xFFE8A33D), statusCritical = Color(0xFFE06C5A),
+    metricCyan = Color(0xFF4FD1C5), metricPurple = Color(0xFF8FA0AE), metricAmber = Color(0xFFE8A33D), metricRose = Color(0xFFE06C5A),
+    chargeColor = Color(0xFFE8A33D), chargeDeep = Color(0xFF8A5D10), chargeBright = Color(0xFFF0C079), chargeGlow = Color(0xFFE8A33D),
+    effortColor = Color(0xFF8FA0AE), effortDeep = Color(0xFF4A5A68), effortBright = Color(0xFFB8C7D3), effortGlow = Color(0xFF8FA0AE),
+    restColor = Color(0xFF2E7E77), restDeep = Color(0xFF1F5751), restBright = Color(0xFF4FD1C5), restGlow = Color(0xFF4FD1C5),
+    stressColor = Color(0xFFE8A33D), stressDeep = Color(0xFF4FD1C5), stressBright = Color(0xFFE06C5A), stressGlow = Color(0xFFE8A33D),
+    scenicCenter = Color(0xFF151E27), scenicEdge = Color(0xFF0E1419), scenicStar = Color(0xFF93A4B2),
+    cardFillTop = Color(0xFF151E27), cardFillBottom = Color(0xFF101922),
+    gold = Color(0xFFE8A33D), goldLight = Color(0xFFF0C079), goldDeep = Color(0xFF8A5D10),
+    goldDeepText = Color(0xFF1A1206), signalYellow = Color(0xFFF0C079),
+    titaniumTop = Color(0xFFE7EEF4), titaniumMid = Color(0xFF93A4B2), titaniumLow = Color(0xFF67798A), titaniumDeep = Color(0xFF4A5A68),
+    tipCore = Color(0xFFFFFFFF),
+)
+
+// Binnacle Light is a RE-TUNE, not an inversion: the dark accents fail contrast on white, so
+// amber/cyan darken (#8A5D10 / #186059) and ramps run pale→deep so "more = more ink".
+val BinnacleLightTokens = PaletteTokens(
+    surfaceBase = Color(0xFFEEF2F6), surfaceRaised = Color(0xFFFFFFFF), surfaceOverlay = Color(0xFFF3F6F9),
+    surfaceInset = Color(0xFFE9EEF3), hairline = Color(0xFFD4DDE5), hairlineStrong = Color(0xFFB9C6D1),
+    textPrimary = Color(0xFF0E1419), textSecondary = Color(0xFF4A5A68), textTertiary = Color(0xFF65788A),
+    glowAmbient = Color(0xFFF0E4C0),
+    accent = Color(0xFF8A5D10), accentHover = Color(0xFF6E4A0C), accentMuted = Color(0xFFF3E7D2), focusRing = Color(0xFF8A5D10),
+    recovery000 = Color(0xFFD9B25C), recovery030 = Color(0xFFC89A3A), recovery055 = Color(0xFFA87718),
+    recovery078 = Color(0xFF8A5D10), recovery100 = Color(0xFF6E4A0C),
+    strain000 = Color(0xFFD9B25C), strain033 = Color(0xFFB88421), strain066 = Color(0xFF8A5D10), strain100 = Color(0xFF6E4A0C),
+    sleepAwake = Color(0xFF8496A5), sleepLight = Color(0xFF2E8C83), sleepDeep = Color(0xFF10403B), sleepREM = Color(0xFF186059),
+    zone1 = Color(0xFFD9B25C), zone2 = Color(0xFFC89A3A), zone3 = Color(0xFFA87718), zone4 = Color(0xFF8A5D10), zone5 = Color(0xFF6E4A0C),
+    statusPositive = Color(0xFF186059), statusWarning = Color(0xFF8A5D10), statusCritical = Color(0xFFA32C1A),
+    metricCyan = Color(0xFF186059), metricPurple = Color(0xFF5A6B79), metricAmber = Color(0xFF8A5D10), metricRose = Color(0xFFA32C1A),
+    chargeColor = Color(0xFF8A5D10), chargeDeep = Color(0xFF6E4A0C), chargeBright = Color(0xFFC89A3A), chargeGlow = Color(0xFF8A5D10),
+    effortColor = Color(0xFF5A6B79), effortDeep = Color(0xFF3E4E5C), effortBright = Color(0xFF8FA0AE), effortGlow = Color(0xFF5A6B79),
+    restColor = Color(0xFF186059), restDeep = Color(0xFF10403B), restBright = Color(0xFF2E8C83), restGlow = Color(0xFF186059),
+    stressColor = Color(0xFF8A5D10), stressDeep = Color(0xFF186059), stressBright = Color(0xFFA32C1A), stressGlow = Color(0xFF8A5D10),
+    scenicCenter = Color(0xFFF7FAFC), scenicEdge = Color(0xFFEEF2F6), scenicStar = Color(0xFFB9C6D1),
+    cardFillTop = Color(0xFFFFFFFF), cardFillBottom = Color(0xFFF3F6F9),
+    gold = Color(0xFF8A5D10), goldLight = Color(0xFFC89A3A), goldDeep = Color(0xFF6E4A0C),
+    goldDeepText = Color(0xFFFFFFFF), signalYellow = Color(0xFFB88421),
+    titaniumTop = Color(0xFFDDE1E6), titaniumMid = Color(0xFFB9C6D1), titaniumLow = Color(0xFF8FA0AE), titaniumDeep = Color(0xFF5A6B79),
+    tipCore = Color(0xFF0E1419),
+)
+
+// MARK: - UI skin (Noop stock vs Binnacle) — persisted, snapshot-mirrored like ChartStylePrefs
+
+enum class UiSkin(val storageValue: String, val label: String) {
+    STOCK("stock", "Noop"),
+    BINNACLE("binnacle", "Binnacle");
+
+    companion object {
+        fun fromStorage(raw: String?): UiSkin = entries.firstOrNull { it.storageValue == raw } ?: STOCK
+    }
+}
+
+/** Skin preference. NoopTheme reads [skin] (snapshot state), so a flip re-themes live. */
+object SkinPrefs {
+    private const val FILE = "noop_prefs"
+    private const val KEY = "theme.skin"
+    private fun prefs(ctx: Context): SharedPreferences =
+        ctx.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+
+    var skin by mutableStateOf(UiSkin.STOCK)
+        private set
+
+    fun load(ctx: Context) {
+        skin = UiSkin.fromStorage(prefs(ctx).getString(KEY, UiSkin.STOCK.storageValue))
+    }
+
+    fun set(ctx: Context, value: UiSkin) {
+        skin = value
+        prefs(ctx).edit().putString(KEY, value.storageValue).apply()
+    }
+}
+
 // MARK: - Chart style (data-viz colour mode) + the Classic throwback ramps
 
 enum class ChartStyle(val storageValue: String, val label: String) {

@@ -528,6 +528,8 @@ fun SettingsScreen(
 
     // Theme (System / Light / Dark) — drives NoopTheme; AppearancePrefs mirrors it in snapshot state.
     var themeMode by remember { mutableStateOf(AppearancePrefs.mode) }
+    // Skin (Noop / Binnacle) — Binnacle fork: swaps the whole token set; SkinPrefs mirrors it live.
+    var uiSkin by remember { mutableStateOf(SkinPrefs.skin) }
     // Chart colours (Titanium / Classic) — re-colours gauges + charts; ChartStylePrefs mirrors it live.
     var chartStyle by remember { mutableStateOf(ChartStylePrefs.style) }
     // Trend charts (Line / Bar) — flips the Trends tab between the gradient line and value-ramp bars.
@@ -983,6 +985,20 @@ fun SettingsScreen(
                     onSelect = { mode ->
                         themeMode = mode
                         AppearancePrefs.set(context, mode)
+                    },
+                )
+            }
+            RowDivider()
+            // Binnacle fork: skin toggle. Noop = stock look; Binnacle = the house design language
+            // (amber/cyan instrument panel, purist lightness data ramps). Applies live, both schemes.
+            FormRow(label = "Skin") {
+                SegmentedPillControl(
+                    items = listOf(UiSkin.STOCK, UiSkin.BINNACLE),
+                    selection = uiSkin,
+                    label = { it.label },
+                    onSelect = { s ->
+                        uiSkin = s
+                        SkinPrefs.set(context, s)
                     },
                 )
             }

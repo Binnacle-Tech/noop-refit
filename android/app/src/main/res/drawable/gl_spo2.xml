@@ -1,0 +1,6 @@
+<!-- Binnacle glyph (NOOP): SpO2 — open droplet. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:pathData="M12,4.4 C9.1,8.2 6.8,11.1 6.8,14.0 A5.2,5.2 0 0 0 17.2,14.0 C17.2,11.1 14.9,8.2 12,4.4 Z"
+        android:strokeColor="#FFFFFFFF" android:strokeWidth="2.1" android:strokeLineJoin="round"/>
+</vector>

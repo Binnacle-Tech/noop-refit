@@ -614,26 +614,26 @@ fun DataSourcesScreen(vm: AppViewModel) {
                 // #660: surface the last writeback OUTCOME so a silently-failing share (revoked
                 // permission, provider error) is visible instead of a healthy-looking toggle. Only
                 // while enabled and after at least one attempt (empty status = never tried).
+                // Binnacle fork: the outcome line renders through StateLine, so the state is carried
+                // by a GLYPH + label, never colour alone (Binnacle §02 — survives greyscale/CVD).
                 if (hcWriteback && hcWbStatus.code.isNotEmpty()) {
                     when (hcWbStatus.code) {
-                        NoopPrefs.HC_WB_PERMISSION_DENIED -> Text(
-                            uiString(R.string.l10n_data_sources_screen_sharing_paused_health_connect_permission_was_e8950315),
-                            style = NoopType.footnote,
-                            color = Palette.accent,
+                        NoopPrefs.HC_WB_PERMISSION_DENIED -> StateLine(
+                            state = UiState.Warning,
+                            text = uiString(R.string.l10n_data_sources_screen_sharing_paused_health_connect_permission_was_e8950315),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { startWriteback() },   // tap re-requests the WRITE permissions
                         )
-                        NoopPrefs.HC_WB_REMOTE_ERROR -> Text(
-                            uiString(R.string.l10n_data_sources_screen_last_share_didn_t_finish_noop_0d6c27f0),
-                            style = NoopType.footnote,
-                            color = Palette.accent,
+                        NoopPrefs.HC_WB_REMOTE_ERROR -> StateLine(
+                            state = UiState.Failed,
+                            text = uiString(R.string.l10n_data_sources_screen_last_share_didn_t_finish_noop_0d6c27f0),
                         )
-                        else -> Text(   // HC_WB_OK
-                            uiString(R.string.l10n_data_sources_screen_last_shared_6bf8389c) +
+                        else -> StateLine(   // HC_WB_OK
+                            state = UiState.Done,
+                            text = uiString(R.string.l10n_data_sources_screen_last_shared_6bf8389c) +
                                 DateUtils.getRelativeTimeSpanString(hcWbStatus.atMs).toString(),
-                            style = NoopType.footnote,
-                            color = Palette.textTertiary,
+                            tint = Palette.textTertiary,   // quiet when healthy; the check still reads
                         )
                     }
                 }
