@@ -92,6 +92,7 @@ class MainActivity : ComponentActivity() {
         AppearancePrefs.load(this)
         ChartStylePrefs.load(this)
         SkinPrefs.load(this)   // Binnacle fork: stock vs Binnacle skin, before first frame (no flash)
+        BinnacleModePrefs.load(this)   // §11 panel mode + vision profile, same no-flash rule
         // Decode the optional on-device profile photo (if set) before first composition so the Today
         // header + Settings avatars show it from the first frame. No-op when no photo is set.
         ProfileAvatarStore.load(this)

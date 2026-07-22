@@ -530,6 +530,9 @@ fun SettingsScreen(
     var themeMode by remember { mutableStateOf(AppearancePrefs.mode) }
     // Skin (Noop / Binnacle) — Binnacle fork: swaps the whole token set; SkinPrefs mirrors it live.
     var uiSkin by remember { mutableStateOf(SkinPrefs.skin) }
+    // Binnacle §11: panel mode (Auto/Medium/Contrast) + vision profile, shown only on the Binnacle skin.
+    var binnaclePanel by remember { mutableStateOf(BinnacleModePrefs.panel) }
+    var binnacleVision by remember { mutableStateOf(BinnacleModePrefs.vision) }
     // Chart colours (Titanium / Classic) — re-colours gauges + charts; ChartStylePrefs mirrors it live.
     var chartStyle by remember { mutableStateOf(ChartStylePrefs.style) }
     // Trend charts (Line / Bar) — flips the Trends tab between the gradient line and value-ramp bars.
@@ -1001,6 +1004,35 @@ fun SettingsScreen(
                         SkinPrefs.set(context, s)
                     },
                 )
+            }
+            // Binnacle §11: four panel modes + vision profiles, Binnacle skin only. Auto follows the
+            // Theme row above; Medium/Contrast are dark-family panels regardless of scheme. Vision
+            // profiles carry separation by lightness (cyan lightens, danger moves off red).
+            if (uiSkin == UiSkin.BINNACLE) {
+                RowDivider()
+                FormRow(label = "Panel") {
+                    SegmentedPillControl(
+                        items = listOf(BinnaclePanel.AUTO, BinnaclePanel.MEDIUM, BinnaclePanel.CONTRAST),
+                        selection = binnaclePanel,
+                        label = { it.label },
+                        onSelect = { p ->
+                            binnaclePanel = p
+                            BinnacleModePrefs.setPanel(context, p)
+                        },
+                    )
+                }
+                RowDivider()
+                FormRow(label = "Vision") {
+                    SegmentedPillControl(
+                        items = listOf(BinnacleVision.OFF, BinnacleVision.DEUTAN, BinnacleVision.PROTAN, BinnacleVision.TRITAN),
+                        selection = binnacleVision,
+                        label = { it.label },
+                        onSelect = { v ->
+                            binnacleVision = v
+                            BinnacleModePrefs.setVision(context, v)
+                        },
+                    )
+                }
             }
             // Binnacle fork: the Chart-colours choice only applies on the stock skin — both Titanium
             // and Classic are rainbow encodings the Binnacle purist ramps replace (Palette.isClassic

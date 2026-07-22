@@ -573,12 +573,27 @@ fun NoopTheme(content: @Composable () -> Unit) {
         AppearanceMode.SYSTEM -> isSystemInDarkTheme()
     }
     // Binnacle fork: the skin (stock vs Binnacle) picks the token set; scheme picks dark/light.
-    // SkinPrefs.skin is snapshot state, so flipping the Settings toggle re-themes live.
+    // On Binnacle, the §11 panel mode can override (Medium / Contrast are dark-family panels
+    // regardless of scheme) and the vision profile retunes the picked set. All snapshot state,
+    // so every Settings flip re-themes live.
+    val binnaclePanel = BinnacleModePrefs.panel
     val tokens = when (SkinPrefs.skin) {
-        UiSkin.BINNACLE -> if (dark) BinnacleDarkTokens else BinnacleLightTokens
+        UiSkin.BINNACLE -> {
+            val base = when (binnaclePanel) {
+                BinnaclePanel.AUTO -> if (dark) BinnacleDarkTokens else BinnacleLightTokens
+                BinnaclePanel.MEDIUM -> BinnacleMediumTokens
+                BinnaclePanel.CONTRAST -> BinnacleContrastTokens
+            }
+            // Vision retune skips the light re-tune (its darkened accents need their own audit).
+            if (base === BinnacleLightTokens) base else base.withBinnacleVision(BinnacleModePrefs.vision)
+        }
         UiSkin.STOCK -> if (dark) DarkTokens else LightTokens
     }
     if (Palette.active !== tokens) Palette.active = tokens
+    // System-bar icons follow the EFFECTIVE panel: Medium/Contrast are dark panels even under a
+    // Light theme, so the bars need light icons there or they vanish.
+    val effectiveDark = dark ||
+        (SkinPrefs.skin == UiSkin.BINNACLE && binnaclePanel != BinnaclePanel.AUTO)
 
     // Status-/nav-bar icon appearance: light icons on the dark theme, dark icons on the warm-paper
     // light theme (otherwise the icons are invisible). Edge-to-edge keeps the bars transparent.
@@ -587,14 +602,14 @@ fun NoopTheme(content: @Composable () -> Unit) {
         SideEffect {
             (view.context as? Activity)?.window?.let { window ->
                 val controller = WindowCompat.getInsetsController(window, view)
-                controller.isAppearanceLightStatusBars = !dark
-                controller.isAppearanceLightNavigationBars = !dark
+                controller.isAppearanceLightStatusBars = !effectiveDark
+                controller.isAppearanceLightNavigationBars = !effectiveDark
             }
         }
     }
 
     MaterialTheme(
-        colorScheme = noopColorScheme(tokens, dark),
+        colorScheme = noopColorScheme(tokens, effectiveDark),
         typography = NoopMaterialTypography,
         shapes = NoopShapes,
         content = content,

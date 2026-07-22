@@ -211,6 +211,122 @@ val BinnacleLightTokens = PaletteTokens(
     tipCore = Color(0xFF0E1419),
 )
 
+// Binnacle §11 — the two extra panel modes, mapped from BinnacleTheme.kt's Medium/Contrast columns.
+// Medium: mid-tone softened panel. Contrast: true-black low-vision panel (AAA), accents brightened.
+val BinnacleMediumTokens = BinnacleDarkTokens.copy(
+    surfaceBase = Color(0xFF232F3A), surfaceRaised = Color(0xFF2C3A47), surfaceOverlay = Color(0xFF354553),
+    surfaceInset = Color(0xFF1C2833), hairline = Color(0xFF3E4E5C), hairlineStrong = Color(0xFF4E6070),
+    textPrimary = Color(0xFFEDF3F8), textSecondary = Color(0xFFB6C6D2), textTertiary = Color(0xFF9EB0BF),
+    accentHover = Color(0xFFF3C68A),
+    statusPositive = Color(0xFF5AD8CC), statusCritical = Color(0xFFF2907E),
+    metricCyan = Color(0xFF5AD8CC), metricPurple = Color(0xFFA6B6C3), metricRose = Color(0xFFF2907E),
+    effortColor = Color(0xFFA6B6C3), effortDeep = Color(0xFF5E7080), effortBright = Color(0xFFB6C6D2), effortGlow = Color(0xFFA6B6C3),
+    restColor = Color(0xFF3E9A92), restBright = Color(0xFF5AD8CC), restGlow = Color(0xFF5AD8CC),
+    sleepAwake = Color(0xFFA6B6C3), sleepLight = Color(0xFF5AD8CC), sleepREM = Color(0xFF3E9A92),
+    stressDeep = Color(0xFF5AD8CC), stressBright = Color(0xFFF2907E),
+    scenicCenter = Color(0xFF2C3A47), scenicEdge = Color(0xFF232F3A), scenicStar = Color(0xFFB6C6D2),
+    cardFillTop = Color(0xFF2C3A47), cardFillBottom = Color(0xFF1C2833),
+    titaniumTop = Color(0xFFEDF3F8), titaniumMid = Color(0xFFB6C6D2), titaniumLow = Color(0xFF9EB0BF), titaniumDeep = Color(0xFF5E7080),
+)
+
+val BinnacleContrastTokens = BinnacleDarkTokens.copy(
+    surfaceBase = Color(0xFF000000), surfaceRaised = Color(0xFF0A0F14), surfaceOverlay = Color(0xFF141C24),
+    surfaceInset = Color(0xFF05080B), hairline = Color(0xFF5A6E7E), hairlineStrong = Color(0xFF8098AC),
+    textPrimary = Color(0xFFFFFFFF), textSecondary = Color(0xFFDCE7EF), textTertiary = Color(0xFFBCCCD8),
+    accent = Color(0xFFFFC061), accentHover = Color(0xFFFFD79A), focusRing = Color(0xFFFFC061),
+    recovery000 = Color(0xFF8A5D10), recovery030 = Color(0xFFB87F26), recovery055 = Color(0xFFE8A33D),
+    recovery078 = Color(0xFFFFC061), recovery100 = Color(0xFFFFD79A),
+    strain000 = Color(0xFF8A5D10), strain033 = Color(0xFFB87F26), strain066 = Color(0xFFE8A33D), strain100 = Color(0xFFFFD79A),
+    zone1 = Color(0xFF8A5D10), zone2 = Color(0xFFB87F26), zone3 = Color(0xFFE8A33D), zone4 = Color(0xFFFFC061), zone5 = Color(0xFFFFD79A),
+    sleepAwake = Color(0xFFB8C7D3), sleepLight = Color(0xFF7BEFE3), sleepDeep = Color(0xFF2E7E77), sleepREM = Color(0xFF4FB3A8),
+    statusPositive = Color(0xFF7BEFE3), statusWarning = Color(0xFFFFC061), statusCritical = Color(0xFFFF8E7A),
+    metricCyan = Color(0xFF7BEFE3), metricPurple = Color(0xFFB8C7D3), metricAmber = Color(0xFFFFC061), metricRose = Color(0xFFFF8E7A),
+    chargeColor = Color(0xFFFFC061), chargeDeep = Color(0xFFB87F26), chargeBright = Color(0xFFFFD79A), chargeGlow = Color(0xFFFFC061),
+    effortColor = Color(0xFFB8C7D3), effortDeep = Color(0xFF7A8B99), effortBright = Color(0xFFDCE7EF), effortGlow = Color(0xFFB8C7D3),
+    restColor = Color(0xFF4FB3A8), restDeep = Color(0xFF2E7E77), restBright = Color(0xFF7BEFE3), restGlow = Color(0xFF7BEFE3),
+    stressColor = Color(0xFFFFC061), stressDeep = Color(0xFF7BEFE3), stressBright = Color(0xFFFF8E7A), stressGlow = Color(0xFFFFC061),
+    scenicCenter = Color(0xFF0A0F14), scenicEdge = Color(0xFF000000), scenicStar = Color(0xFFDCE7EF),
+    cardFillTop = Color(0xFF0A0F14), cardFillBottom = Color(0xFF05080B),
+    gold = Color(0xFFFFC061), goldLight = Color(0xFFFFD79A), goldDeep = Color(0xFFB87F26),
+    titaniumTop = Color(0xFFFFFFFF), titaniumMid = Color(0xFFDCE7EF), titaniumLow = Color(0xFFBCCCD8), titaniumDeep = Color(0xFF8098AC),
+)
+
+// Binnacle §11 vision profiles: hue can't be recovered under CVD, so separation is carried by
+// LIGHTNESS — cyan lightens rather than shifts, and danger moves OFF red so it can't collide with
+// amber. Applied AFTER the panel-mode pick (dark/medium/contrast bases; the light re-tune is skipped —
+// its darkened accents need their own audit before a profile can responsibly retune them).
+fun PaletteTokens.withBinnacleVision(v: BinnacleVision): PaletteTokens = when (v) {
+    BinnacleVision.OFF -> this
+    BinnacleVision.DEUTAN, BinnacleVision.PROTAN -> copy(
+        accent = Color(0xFFEA9F3E), accentHover = Color(0xFFF5C489), focusRing = Color(0xFFEA9F3E),
+        statusPositive = Color(0xFFADEBE5), metricCyan = Color(0xFFADEBE5),
+        statusCritical = Color(0xFFDD5F7F), metricRose = Color(0xFFDD5F7F),
+        restColor = Color(0xFF5F9C96), restBright = Color(0xFFADEBE5), restGlow = Color(0xFFADEBE5),
+        sleepLight = Color(0xFFADEBE5), sleepREM = Color(0xFF5F9C96),
+        stressDeep = Color(0xFFADEBE5), stressBright = Color(0xFFDD5F7F),
+        gold = Color(0xFFEA9F3E), goldLight = Color(0xFFF5C489),
+    )
+    BinnacleVision.TRITAN -> copy(
+        accent = Color(0xFFED9E5A), accentHover = Color(0xFFF6C39A), focusRing = Color(0xFFED9E5A),
+        statusPositive = Color(0xFFADEBE5), metricCyan = Color(0xFFADEBE5),
+        statusCritical = Color(0xFFDD5F63), metricRose = Color(0xFFDD5F63),
+        restColor = Color(0xFF5F9C96), restBright = Color(0xFFADEBE5), restGlow = Color(0xFFADEBE5),
+        sleepLight = Color(0xFFADEBE5), sleepREM = Color(0xFF5F9C96),
+        stressDeep = Color(0xFFADEBE5), stressBright = Color(0xFFDD5F63),
+        gold = Color(0xFFED9E5A), goldLight = Color(0xFFF6C39A),
+    )
+}
+
+enum class BinnaclePanel(val storageValue: String, val label: String) {
+    AUTO("auto", "Auto"),
+    MEDIUM("medium", "Medium"),
+    CONTRAST("contrast", "Contrast");
+
+    companion object {
+        fun fromStorage(raw: String?): BinnaclePanel = entries.firstOrNull { it.storageValue == raw } ?: AUTO
+    }
+}
+
+enum class BinnacleVision(val storageValue: String, val label: String) {
+    OFF("off", "Off"),
+    DEUTAN("deutan", "Deutan"),
+    PROTAN("protan", "Protan"),
+    TRITAN("tritan", "Tritan");
+
+    companion object {
+        fun fromStorage(raw: String?): BinnacleVision = entries.firstOrNull { it.storageValue == raw } ?: OFF
+    }
+}
+
+/** Binnacle-skin panel mode (Auto follows the Theme scheme) + vision profile. Snapshot-mirrored. */
+object BinnacleModePrefs {
+    private const val FILE = "noop_prefs"
+    private const val KEY_PANEL = "theme.binnaclePanel"
+    private const val KEY_VISION = "theme.binnacleVision"
+    private fun prefs(ctx: Context): SharedPreferences =
+        ctx.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+
+    var panel by mutableStateOf(BinnaclePanel.AUTO)
+        private set
+    var vision by mutableStateOf(BinnacleVision.OFF)
+        private set
+
+    fun load(ctx: Context) {
+        panel = BinnaclePanel.fromStorage(prefs(ctx).getString(KEY_PANEL, BinnaclePanel.AUTO.storageValue))
+        vision = BinnacleVision.fromStorage(prefs(ctx).getString(KEY_VISION, BinnacleVision.OFF.storageValue))
+    }
+
+    fun setPanel(ctx: Context, value: BinnaclePanel) {
+        panel = value
+        prefs(ctx).edit().putString(KEY_PANEL, value.storageValue).apply()
+    }
+
+    fun setVision(ctx: Context, value: BinnacleVision) {
+        vision = value
+        prefs(ctx).edit().putString(KEY_VISION, value.storageValue).apply()
+    }
+}
+
 // MARK: - UI skin (Noop stock vs Binnacle) — persisted, snapshot-mirrored like ChartStylePrefs
 
 enum class UiSkin(val storageValue: String, val label: String) {

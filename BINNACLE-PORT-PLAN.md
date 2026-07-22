@@ -152,8 +152,9 @@ Resolve the 5 decisions and I'll turn any phase into concrete edits.
 - **§06 Signature rule** — the biggest open violation. Day-cycle sky, card washes, glows,
   and the liquid gauges are all loud at once. Candidate signature: the liquid gauge trio;
   everything else quiets around it. (Planned "signature purge".)
-- **§11 Modes & vision profiles** — Dark/Light only; Medium, Contrast, deutan/protan/tritan
-  pending (values exist in BinnacleTheme.kt).
+- **§11 Modes & vision profiles** — DONE: Medium + Contrast panel modes and deutan/protan/
+  tritan profiles shipped (Settings → Appearance, Binnacle skin only). Known gap: vision
+  retune skips the Light re-tune pending its own contrast audit.
 - **§07 Motion restraint / reduced-motion** — unaudited; NOOP has ambient liquid/breathe
   animation. Doc requires reduced-motion respected.
 - **§13 Form controls** — RESOLVED: the active-calories opt-in converted to a switch
