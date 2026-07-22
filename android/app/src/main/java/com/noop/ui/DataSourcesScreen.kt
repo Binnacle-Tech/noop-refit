@@ -33,8 +33,6 @@ import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.SettingsInputAntenna
 import androidx.compose.material.icons.filled.Watch
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -575,31 +573,15 @@ fun DataSourcesScreen(vm: AppViewModel) {
                 }
                 // Opt-in EXTRA (only while writeback is on): also share NOOP's on-device active-energy
                 // estimate. Off by default because it double-counts if a phone/watch already writes
-                // active calories — tick it only if nothing else feeds Health Connect that metric.
+                // active calories — turn it on only if nothing else feeds Health Connect that metric.
+                // Binnacle §13: it takes effect immediately, so it is a SWITCH, not a checkbox
+                // (checkbox would promise a deferred Save that never comes).
                 if (hcWriteback) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { // whole-row tap toggles, matching the checkbox
-                                val on = !hcWriteActiveKcal
-                                vm.setHcWriteActiveKcal(on)
-                                if (on) startActiveKcalWriteback()
-                            },
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        Checkbox(
-                            checked = hcWriteActiveKcal,
-                            onCheckedChange = { on ->
-                                vm.setHcWriteActiveKcal(on)
-                                if (on) startActiveKcalWriteback()
-                            },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = Palette.accent,
-                                uncheckedColor = Palette.hairline,
-                                checkmarkColor = Palette.surfaceBase,
-                            ),
-                        )
                         Column(modifier = Modifier.weight(1f)) {
                             Text("Also share active calories", style = NoopType.subhead, color = Palette.textPrimary)
                             Text(
@@ -609,6 +591,23 @@ fun DataSourcesScreen(vm: AppViewModel) {
                                 color = Palette.textTertiary,
                             )
                         }
+                        Switch(
+                            checked = hcWriteActiveKcal,
+                            onCheckedChange = { on ->
+                                vm.setHcWriteActiveKcal(on)
+                                if (on) startActiveKcalWriteback()
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Palette.surfaceBase,
+                                checkedTrackColor = Palette.accent,
+                                uncheckedThumbColor = Palette.textSecondary,
+                                uncheckedTrackColor = Palette.surfaceInset,
+                                uncheckedBorderColor = Palette.hairline,
+                            ),
+                            modifier = Modifier.semantics {
+                                contentDescription = "Also share active calories to Health Connect"
+                            },
+                        )
                     }
                 }
                 // #660: surface the last writeback OUTCOME so a silently-failing share (revoked
@@ -634,6 +633,9 @@ fun DataSourcesScreen(vm: AppViewModel) {
                             text = uiString(R.string.l10n_data_sources_screen_last_shared_6bf8389c) +
                                 DateUtils.getRelativeTimeSpanString(hcWbStatus.atMs).toString(),
                             tint = Palette.textTertiary,   // quiet when healthy; the check still reads
+                            // Binnacle §03: a timestamp is machine data — it reads mono on the skin.
+                            style = if (SkinPrefs.skin == UiSkin.BINNACLE) NoopType.mono(11f)
+                                    else NoopType.footnote,
                         )
                     }
                 }

@@ -143,8 +143,9 @@ Resolve the 5 decisions and I'll turn any phase into concrete edits.
 - **Never colour alone** — enforced on retrofitted surfaces (writeback status, hero domains,
   Key Metrics tiles). Many legacy surfaces still signal by colour only (readiness flags,
   source badges, zone charts' in-chart encoding). Rollout continues surface-by-surface.
-- **§03 (machine data reads mono)** — only the raw/log style is mono; live values remain
-  tabular Inter. Open decision.
+- **§03 (machine data reads mono)** — DECIDED: mono for small data (timestamps, log-ish
+  lines) on the Binnacle skin; big tile/gauge numbers stay Inter tnum for readability.
+  First conversion: the writeback "Last shared" timestamp. Rollout continues.
 - **Part III Voice** — new copy follows the rules; existing copy unaudited.
 
 ## Not yet compliant
@@ -155,8 +156,7 @@ Resolve the 5 decisions and I'll turn any phase into concrete edits.
   pending (values exist in BinnacleTheme.kt).
 - **§07 Motion restraint / reduced-motion** — unaudited; NOOP has ambient liquid/breathe
   animation. Doc requires reduced-motion respected.
-- **§13 Form controls** — "switch means immediate": the active-calories opt-in is a checkbox
-  but applies immediately → per the doc it should be a switch. User decision pending
-  (checkbox was explicitly requested).
+- **§13 Form controls** — RESOLVED: the active-calories opt-in converted to a switch
+  ("switch means immediate"); it applies on flip like the sharing toggle above it.
 - **§04/§05/§14** — layout grammar, component kit, loading/empty/error idioms: NOOP's own,
   unaudited against the doc.
