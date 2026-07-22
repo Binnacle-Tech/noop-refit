@@ -155,8 +155,11 @@ Resolve the 5 decisions and I'll turn any phase into concrete edits.
 - **§11 Modes & vision profiles** — DONE: Medium + Contrast panel modes and deutan/protan/
   tritan profiles shipped (Settings → Appearance, Binnacle skin only). Known gap: vision
   retune skips the Light re-tune pending its own contrast audit.
-- **§07 Motion restraint / reduced-motion** — unaudited; NOOP has ambient liquid/breathe
-  animation. Doc requires reduced-motion respected.
+- **§07 Motion restraint / reduced-motion** — AUDITED: only three infinite animations exist.
+  Sky already respected reduce-motion; the connection-dot halo did NOT (fixed — now static
+  under reduce-motion on both skins, and always static on Binnacle: ambient decoration);
+  the live-session breath ring is purposeful (pacing cue) so it keeps animating on the skin
+  but now respects reduce-motion (mid-breath static). The two gates are upstreamable.
 - **§13 Form controls** — RESOLVED: the active-calories opt-in converted to a switch
   ("switch means immediate"); it applies on flip like the sharing toggle above it.
 - **§04/§05/§14** — layout grammar, component kit, loading/empty/error idioms: NOOP's own,

@@ -299,7 +299,12 @@ private fun GuardianRing(
             .semantics { contentDescription = uiString(R.string.l10n_live_session_screen_session_ring_statelabel_long_press_to_42ac1b3b, stateLabel) },
         contentAlignment = Alignment.Center,
     ) {
-        if (breathing) {
+        // Quality floor: the breath ring is purposeful (in-band pacing cue), so it KEEPS animating on
+        // the Binnacle skin — but it must still respect the system reduce-motion setting, which it
+        // predated. Reduced -> the mid-breath static ring keeps the in-band signal without motion.
+        if (breathing && rememberReduceMotion()) {
+            RingCanvas(ringColor, 0.5f, inBandFraction, arcColor = if (stale) ringColor else teal)
+        } else if (breathing) {
             // Slow breath: ~5.2s per full cycle, composed only while in-band so an off-band or stale
             // ring keeps zero per-frame animation work.
             val breath by rememberInfiniteTransition(label = uiString(R.string.l10n_live_session_screen_guardianbreath_f76a0607)).animateFloat(

@@ -323,6 +323,17 @@ fun ConnectionDot(
  *  the dot is actually pulsing (a still dot creates no animation subscription — the scroll-jank fix). */
 @Composable
 private fun PulsingDotHalo(tone: StrandTone, size: Dp) {
+    // Quality floor: respect the system reduce-motion setting (this halo predated the check).
+    // Binnacle §07: an always-breathing halo is ambient decoration — on the skin it renders STATIC,
+    // keeping the LIVE cue (the halo ring) without per-frame motion competing with the signature.
+    if (rememberReduceMotion() || SkinPrefs.skin == UiSkin.BINNACLE) {
+        Box(
+            modifier = Modifier
+                .size(size)
+                .drawBehind { drawCircleScaled(tone.color, 1.6f, 0.22f) },
+        )
+        return
+    }
     val transition = rememberInfiniteTransition(label = "dot")
     val scale by transition.animateFloat(
         initialValue = 1.0f,
