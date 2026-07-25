@@ -2358,14 +2358,8 @@ private fun ScoreHeroRow(
         ) {
             // iOS parity (TodayView.scoreHeroRow): three EQUAL rings in CHARGE · EFFORT · REST order, no
             // enlarged centre, filling the width as one balanced row. Ring stroke 0.10 (WHOOP weight).
-            // Size the three vessels to ACTUALLY FIT the measured width: 3 rings + 2 gaps == maxWidth
-            // exactly at the divisor of 3. The old /3.1 with a 90dp FLOOR overflowed on narrow/high-
-            // density Android screens (a Mac/iPad-width assumption) — three 90dp vessels + gaps exceeded
-            // the row, clipping REST off the right ("R…"). The signature element must never clip
-            // (§06/§15): rings shrink to fit first, capped at 112dp on wide screens, floor only low
-            // enough to stay legible.
             val ringGap = 14.dp
-            val ring = ((maxWidth - ringGap * 2) / 3f).coerceIn(72.dp, 112.dp)
+            val ring = ((maxWidth - ringGap * 2) / 3.1f).coerceIn(90.dp, 112.dp)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(ringGap, Alignment.CenterHorizontally),
@@ -2373,13 +2367,10 @@ private fun ScoreHeroRow(
             ) {
                 // CHARGE, recovery 0–100, as a liquid VESSEL with the value counting up over it. Honest
                 // empty / calibrating overlay; badges its recovery winner.
-                val binnacleHero = SkinPrefs.skin == UiSkin.BINNACLE
                 HeroRingColumn(
                     domain = DomainTheme.Charge,
                     onInfo = { onScoreInfo(ScoreSection.CHARGE) },
                     onRingTap = onChargeTap,
-                    modifier = Modifier.weight(1f),
-                    compactLabel = binnacleHero,
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         // #802: when today has no Charge yet but a prior night's value is carried, draw a
@@ -2415,12 +2406,7 @@ private fun ScoreHeroRow(
                     }
                 }
                 // EFFORT, strain on the gauge, on the user's selected scale, as a liquid vessel.
-                HeroRingColumn(
-                    domain = DomainTheme.Effort,
-                    onInfo = { onScoreInfo(ScoreSection.EFFORT) },
-                    modifier = Modifier.weight(1f),
-                    compactLabel = binnacleHero,
-                ) {
+                HeroRingColumn(domain = DomainTheme.Effort, onInfo = { onScoreInfo(ScoreSection.EFFORT) }) {
                     Box(contentAlignment = Alignment.Center) {
                         HeroScoreVessel(
                             fraction = if (effortOutOf > 0) effortVal / effortOutOf else 0.0,
@@ -2434,15 +2420,12 @@ private fun ScoreHeroRow(
                         if (strain == null) RingNoData()
                     }
                 }
-                // REST, sleep composite 0–100. An EQUAL-thirds column (weight) so all three vessels are
-                // the SAME size and none clips — the old fixed-width box made Rest narrower than its
-                // siblings and clipped its label to "R…". The box still anchors the card source badge.
-                Box(modifier = Modifier.weight(1f)) {
+                // REST, sleep composite 0–100. Its fixed-width box also anchors the card-level source badge:
+                // the badge may grow leftward, but its trailing edge always matches the Rest vessel.
+                Box(modifier = Modifier.width(ring)) {
                     HeroRingColumn(
                         domain = DomainTheme.Rest,
                         onInfo = { onScoreInfo(ScoreSection.REST) },
-                        modifier = Modifier.fillMaxWidth(),
-                        compactLabel = binnacleHero,
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             HeroScoreVessel(
