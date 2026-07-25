@@ -731,9 +731,12 @@ private fun EffortHero(
                     style = NoopType.headline,
                     color = Palette.textPrimary,
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(Metrics.gap), modifier = Modifier.fillMaxWidth()) {
-                    HeroStat("Sessions", "${rows.size}", Palette.effortColor, Modifier.weight(1f))
-                    HeroStat("Active", oneDecimal(totalTimeH) + "h", Palette.textPrimary, Modifier.weight(1f))
+                // Stacked, not side-by-side: two stats sharing this half-width column (beside the gauge)
+                // starved each other into "SESSI/ONS" + "ACTIV/E" and "49…" on a phone. One per line, each
+                // gets the full column width.
+                Row(horizontalArrangement = Arrangement.spacedBy(Metrics.gap * 2), modifier = Modifier.fillMaxWidth()) {
+                    HeroStat("Sessions", "${rows.size}", Palette.effortColor)
+                    HeroStat("Active", oneDecimal(totalTimeH) + "h", Palette.textPrimary)
                 }
                 Text(
                     if (modal != null) "Mostly ${WorkoutEditing.displaySport(modal.sport)} (${effectiveRange.caption})."
@@ -750,7 +753,8 @@ private fun EffortHero(
 private fun HeroStat(title: String, value: String, tint: Color, modifier: Modifier = Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Overline(title)
-        Text(value, style = NoopType.number(20f), color = tint, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // Shrink-to-fit rather than truncate to "49…" in a narrow column.
+        AutoSizeValue(value, style = NoopType.number(20f), color = tint)
     }
 }
 
