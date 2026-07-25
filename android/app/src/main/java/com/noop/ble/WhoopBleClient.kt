@@ -40,6 +40,7 @@ import com.noop.protocol.DeviceFamily
 import com.noop.protocol.Framing
 import com.noop.protocol.HapticClock
 import com.noop.protocol.Reassembler
+import com.noop.protocol.Whoop5Variant
 import com.noop.protocol.RebootProbeVariant
 import com.noop.protocol.Streams
 import com.noop.protocol.Whoop5Config
@@ -437,6 +438,13 @@ class WhoopBleClient(
         private val HEART_RATE_CHAR: UUID = UUID.fromString("00002a37-0000-1000-8000-00805f9b34fb")
         private val BATTERY_SERVICE: UUID = UUID.fromString("0000180f-0000-1000-8000-00805f9b34fb")
         private val BATTERY_CHAR: UUID = UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb")
+
+        // Standard Device Information Service — READ-ONLY. Used only to tell a WHOOP MG apart from a
+        // plain 5.0 (#520); [Whoop5Variant] resolves the serial prefix + hardware-revision string.
+        // Never written, never subscribed. A WHOOP 4.0 never reads these (see readDisIdentity).
+        private val DIS_SERVICE: UUID = UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb")
+        private val DIS_SERIAL_CHAR: UUID = UUID.fromString("00002a25-0000-1000-8000-00805f9b34fb")
+        private val DIS_HW_REV_CHAR: UUID = UUID.fromString("00002a27-0000-1000-8000-00805f9b34fb")
 
         // Client Characteristic Configuration Descriptor — written to enable notifications
         // (CoreBluetooth does this implicitly via setNotifyValue; Android requires the explicit write).
@@ -1684,6 +1692,8 @@ class WhoopBleClient(
     /// The strap family the user chose to pair, remembered so an auto-reconnect after a
     /// dropout re-scans for the same model instead of falling back to WHOOP 4.0.
     private var selectedModel = WhoopModel.WHOOP4
+    /** #716: true once the seeded "WHOOP" model has been stamped to the correct family. */
+    private var modelStamped = false
     /// The last device we connected to, kept so an auto-reconnect after a dropout can connect
     /// DIRECTLY to it (autoConnect=true) instead of scanning. A bonded strap the OS still holds (or
     /// that simply isn't advertising) won't appear in a scan — so the old scan-only reconnect looped
@@ -2022,6 +2032,12 @@ class WhoopBleClient(
 
     /** Guards the once-per-connect initial offload kick (Swift `backfillStarted`). */
     private var backfillStarted = false
+
+    // #520 DIS identity — read ONCE per connection, post-handshake, 5/MG only. Serial and hardware
+    // revision are immutable, so they are never re-polled (unlike the battery). Reset on disconnect.
+    private var disRead = false
+    private var disSerial: String? = null
+    private var disHwRev: String? = null
 
     /** #364 auto-continue: consecutive immediate re-kicks after a 60s idle-cap OR HISTORY_COMPLETE exit on
      *  THIS connection. Bounded by [MAX_AUTO_CONTINUES] so a pathological strap can't pin the radio. Reset
@@ -3136,6 +3152,54 @@ class WhoopBleClient(
      * So WHOOP 4 uses ONLY the command; WHOOP 5/MG uses ONLY 0x2A19 (its proprietary command isn't framed
      * — see send()). Mirrors macOS BLEManager.refreshBattery().
      */
+    /**
+     * #520: read the strap's DIS identity so a WHOOP MG can be told apart from a plain 5.0.
+     *
+     * Post-handshake ONLY (a 5/MG refuses standard reads on an unencrypted link — the same reason the
+     * battery read is deferred), 5/MG ONLY (a 4.0 issues no new reads at all), and ONCE per connection:
+     * serial and hardware revision are immutable, so unlike the battery they are never re-polled.
+     *
+     * Android serializes GATT operations, so the two reads are CHAINED, not fired together — the
+     * hardware-revision read is issued from [onInbound] once the serial lands. Firing both here would
+     * silently drop the second. Read-only and non-fatal: any failure just leaves the variant UNKNOWN.
+     */
+    fun readDisIdentity() {
+        if (disRead) return
+        val g = gatt ?: return
+        if (connectedFamily == DeviceFamily.WHOOP4) return
+        val ops = gattOps ?: return
+        val ch = g.getService(DIS_SERVICE)?.getCharacteristic(DIS_SERIAL_CHAR)
+        if (ch != null && (ch.properties and BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
+            disRead = true
+            safeGatt("readCharacteristic(dis-serial)") { ops.readCharacteristicCompat(ch) }
+        } else {
+            log("DIS: serial characteristic unavailable — hardware variant stays unknown")
+        }
+    }
+
+    /** Chained second half of [readDisIdentity] — issued only after the serial read has landed. */
+    private fun readDisHardwareRevision() {
+        val g = gatt ?: return
+        val ops = gattOps ?: return
+        val ch = g.getService(DIS_SERVICE)?.getCharacteristic(DIS_HW_REV_CHAR) ?: return
+        if ((ch.properties and BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
+            safeGatt("readCharacteristic(dis-hwrev)") { ops.readCharacteristicCompat(ch) }
+        }
+    }
+
+    /**
+     * Resolve + log the 5/MG hardware variant from whatever DIS strings have landed (#520). Diagnostic
+     * only — nothing gates on it yet.
+     *
+     * The serial is a device identifier, so ONLY its 3-character prefix is logged (that is the entire
+     * information content here) — never the full string, which would end up in a shareable strap log.
+     */
+    private fun noteWhoop5VariantFromDis() {
+        val variant = Whoop5Variant.from(disSerial, disHwRev)
+        val prefix = disSerial?.trim()?.uppercase()?.take(3) ?: "?"
+        log("DIS: serialPrefix=$prefix hwRev=${disHwRev ?: "?"} -> variant=${variant.label}")
+    }
+
     fun refreshBattery() {
         val g = gatt
         if (g == null) {
@@ -3203,25 +3267,48 @@ class WhoopBleClient(
      *  strap was connected when we sent it), so a "didn't buzz" report shows sent-vs-strap-reports. */
     private fun recordAlarmArm(sentEpoch: Long) {
         runCatching {
-            NoopPrefs.of(context).edit()
+            val editor = NoopPrefs.of(context).edit()
                 .putLong("alarm.lastArmSentEpoch", sentEpoch)
                 .putLong("alarm.lastArmAt", System.currentTimeMillis())
                 .putBoolean("alarm.lastArmConnected", _state.value.connected)
-                .apply()
+            // #34: live HR at the moment of the arm, purely to test a hypothesis raised on a reporter's
+            // log — morning wake-up and morning short-horizon arms have fired reliably since v9.0.0, but
+            // an identical evening short-horizon arm (same code path, same commands, no day/night branch
+            // anywhere in armStrapAlarm) did not. One firmware-side explanation that would fit every
+            // reported case: the physical alarm haptic might only fire while the strap's OWN sleep/rest
+            // detection considers the wearer sleep-adjacent, independent of anything NOOP sends. This
+            // doesn't prove or fix that — it's a free read of state already tracked live, logged so the
+            // next reported failure (ideally an evening one) can be compared against the resting HR of
+            // the successful arms already on file. Absent key means no HR had streamed yet at arm time.
+            val hr = _state.value.heartRate
+            if (hr != null) editor.putInt("alarm.lastArmHeartRate", hr) else editor.remove("alarm.lastArmHeartRate")
+            editor.apply()
         }
     }
 
+    /** Whether a command written right now would actually reach the strap — the same conditions [send]
+     *  guards on. Lets a caller that REPORTS an outcome to the user check first, instead of logging
+     *  success for a write that was dropped (#730). Twin of macOS `commandChannelReady`. */
+    private val commandChannelReady: Boolean get() = gatt != null && cmdCharacteristic != null
+
     /** Clear the strap's firmware alarm. Port of macOS `BLEManager.disableStrapAlarm`. */
     fun disableStrapAlarm() {
+        // #730: report the OUTCOME, not the intent. [send] drops the write when the link isn't up and logs
+        // "ignored — not connected", but this then logged "Alarm: disarmed" anyway — telling the user the
+        // firmware alarm was cleared when the command never reached the strap, so a strap that IS armed
+        // would still buzz. (reconcileStrapAlarm already re-runs on the bond edge, so a deferred disarm is
+        // re-issued once the link is up — Android never had the iOS gap where that re-apply was skipped.)
+        val willReach = commandChannelReady
+        val notSent = "Alarm: disarm NOT sent — not connected; will retry on connect (strap may still be armed)"
         if (connectedFamily == DeviceFamily.WHOOP5) {
             // 5/MG DISABLE_ALARM is REVISION_2 [0x02, 0xFF]. Sent unconditionally (clearing is safe
             // even if arming was gated off — a no-op on a strap with no alarm set). (PR #85)
             send(CommandNumber.DISABLE_ALARM, AlarmPayload.disableRev2())
-            log("Alarm: disarmed (5/MG rev2)")
+            log(if (willReach) "Alarm: disarmed (5/MG rev2)" else notSent)
             return
         }
         send(CommandNumber.DISABLE_ALARM, byteArrayOf(0x01))
-        log("Alarm: disarmed")
+        log(if (willReach) "Alarm: disarmed" else notSent)
     }
 
     // ====================================================================================
@@ -3259,6 +3346,22 @@ class WhoopBleClient(
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val device: BluetoothDevice = result.device
             val name = result.scanRecord?.deviceName ?: device.name ?: "unknown"
+            // #716: the seeded "my-whoop" device has model "WHOOP" (no generation). Once a live
+            // scan confirms which service family the strap advertises, stamp the correct model so
+            // forRegistryModel returns the right DeviceFamily (fixes skin-temp ADC scale + display).
+            if (!modelStamped) {
+                modelStamped = true
+                ioScope.launch {
+                    val stale = repository.pairedDevices().firstOrNull {
+                        it.status == "active" && it.model == "WHOOP"
+                    }
+                    if (stale != null) {
+                        val correct = if (selectedModel == WhoopModel.WHOOP4) "WHOOP 4.0" else "WHOOP 5.0 / MG"
+                        repository.setDeviceModel(stale.id, correct)
+                        log("Updated device model from \"WHOOP\" to \"$correct\" (#716)")
+                    }
+                }
+            }
             val advertisedServiceUuids = result.scanRecord?.serviceUuids
                 ?.map { it.uuid.toString().lowercase() }
                 .orEmpty()
@@ -4121,6 +4224,17 @@ class WhoopBleClient(
             uuid == BATTERY_CHAR -> if (connectedFamily != DeviceFamily.WHOOP4) {
                 bytes.firstOrNull()?.let { setBattery((it.toInt() and 0xFF).toDouble()) }
             } else Unit
+            // #520 DIS identity. NUL-terminated ASCII per the DIS spec, so trim padding. The serial
+            // lands first and CHAINS the hardware-revision read (Android serializes GATT ops).
+            uuid == DIS_SERIAL_CHAR -> {
+                disSerial = bytes.toString(Charsets.UTF_8).trim { it == '\u0000' || it.isWhitespace() }
+                noteWhoop5VariantFromDis()
+                readDisHardwareRevision()
+            }
+            uuid == DIS_HW_REV_CHAR -> {
+                disHwRev = bytes.toString(Charsets.UTF_8).trim { it == '\u0000' || it.isWhitespace() }
+                noteWhoop5VariantFromDis()
+            }
             // WHOOP4 custom notify chars, OR the WHOOP 5/MG puffin notify chars (fd4b0003/4/5/7) once
             // bonded — both carry framed records (REALTIME_DATA etc.) through the family-aware reassembler.
             uuid == CMD_NOTIFY_CHAR || uuid == EVENT_NOTIFY_CHAR || uuid == DATA_NOTIFY_CHAR ||
@@ -5246,6 +5360,9 @@ class WhoopBleClient(
                 // Populate the battery ring right after connect, not only once the Live screen opens. Posted
                 // after the clock writes settle so the 0x2A19 read does not race them on a slow stack.
                 handler.postDelayed({ refreshBattery() }, BATTERY_ON_CONNECT_DELAY_MS)
+                // #520: read the DIS identity on the same post-handshake schedule, staggered after the
+                // battery read so the two do not contend for the serialized GATT queue.
+                handler.postDelayed({ readDisIdentity() }, BATTERY_ON_CONNECT_DELAY_MS * 2)
                 log("WHOOP 5/MG: clock synced (set/get) — strap can persist history now")
                 if (!backfillStarted) {
                     backfillStarted = true
@@ -5409,6 +5526,16 @@ class WhoopBleClient(
             return
         }
         if (backfilling) return
+        // #700: if GET_CLOCK never responded (Android has no explicit clockRef on the client — the
+        // Backfiller defaults to identity), seed a rough correlation from the Data Range's newest-banked
+        // timestamp. The offset is approximate but vastly better than identity (offset 0), which can
+        // mis-date nights when the strap's RTC has drifted. No-op when strapNewestTs is null (no Data
+        // Range received yet) — the Backfiller keeps its identity default, same as today.
+        strapNewestTs?.let { newest ->
+            val wall = (System.currentTimeMillis() / 1000L).toInt()
+            backfiller.clockRef = ClockRef(device = newest.toInt(), wall = wall)
+            log("Clock: seeded backfiller correlation from Data Range (device=$newest wall=$wall, offset ${wall - newest}s)")
+        }
         // #42/#364: consecutiveAutoContinues > 0 means this offload is re-kicked after an EARLIER session
         // in the same burst banked rows — tell the backfiller so its no-cursor END reads as "caught up",
         // not "no banked history / charge to 100%". A fresh offload (count 0) keeps the honest guidance.
@@ -6242,6 +6369,10 @@ class WhoopBleClient(
         // Reset offload state so the next connect starts a fresh session (port of the backfill
         // flag resets in didDisconnectPeripheral). Timers are handler-posted, so cancel them here.
         backfillStarted = false
+        // #520: a re-connect must re-read the DIS identity (the strap may be a different one).
+        disRead = false
+        disSerial = null
+        disHwRev = null
         backfilling = false
         backfillDraining = false
         backfillFrameQueue.clear()
