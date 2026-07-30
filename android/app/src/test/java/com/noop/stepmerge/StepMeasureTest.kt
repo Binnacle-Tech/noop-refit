@@ -93,4 +93,56 @@ class StepMeasureTest {
     @Test fun factor_nullWhenNoOverlapToMeasure() {
         assertNull(StepMeasure.calibrationFactor(bias(0.0, 0.0, 0.0)))
     }
+
+    // ---- per-day accrual ----
+
+    private fun day(d: String, hours: Double, phone: Double, whoop: Double) =
+        StepMeasure.DayStat(d, (hours * H).toLong(), phone, whoop)
+
+    @Test fun clip_trimsAndProratesToWindow() {
+        assertEquals(
+            listOf(Triple(25L, 75L, 50.0)),
+            StepMeasure.clip(listOf(iv(0, 100, 100.0)), 25, 75).map { Triple(it.startMs, it.endMs, it.count) },
+        )
+        assertTrue(StepMeasure.clip(listOf(iv(0, 100, 100.0)), 200, 300).isEmpty())
+    }
+
+    @Test fun accrue_overwritesSameDay_newestFirst() {
+        val prior = listOf(day("2026-07-01", 2.0, 100.0, 250.0), day("2026-07-02", 2.0, 999.0, 999.0))
+        val out = StepMeasure.accrue(prior, day("2026-07-02", 3.0, 200.0, 500.0))
+        assertEquals(listOf("2026-07-02", "2026-07-01"), out.map { it.day })   // sorted newest-first
+        assertEquals(200.0, out.first().phone, 1e-9)                            // today overwrote, not summed
+    }
+
+    @Test fun accrue_prunesToKeepDays() {
+        val prior = listOf(day("2026-07-01", 1.0, 1.0, 1.0), day("2026-07-02", 1.0, 1.0, 1.0))
+        val out = StepMeasure.accrue(prior, day("2026-07-03", 1.0, 1.0, 1.0), keepDays = 2)
+        assertEquals(listOf("2026-07-03", "2026-07-02"), out.map { it.day })   // oldest dropped
+    }
+
+    @Test fun accruedFactor_averagesOverDays_thenGates() {
+        // 3 days summing to 7h / phone 1000 / whoop 2500 → ratio 2.5 → factor 0.4.
+        val stats = listOf(
+            day("2026-07-01", 3.0, 400.0, 1000.0),
+            day("2026-07-02", 2.0, 300.0, 750.0),
+            day("2026-07-03", 2.0, 300.0, 750.0),
+        )
+        assertEquals(0.4, StepMeasure.accruedFactor(stats)!!, 1e-9)
+        // Same ratio but only 4h total accrued → still waiting.
+        assertNull(StepMeasure.accruedFactor(listOf(day("2026-07-01", 4.0, 1000.0, 2500.0))))
+    }
+
+    @Test fun encodeDecode_roundTrips() {
+        val stats = listOf(day("2026-07-01", 1.0, 1000.0, 2500.0), day("2026-07-02", 2.5, 333.0, 812.0))
+        val back = StepMeasure.decode(StepMeasure.encode(stats))
+        assertEquals(stats.map { it.day }, back.map { it.day })
+        assertEquals(2500.0, back.first().whoop, 1e-9)
+        assertEquals(2.5 * H, back[1].coMs.toDouble(), 0.0)
+    }
+
+    @Test fun decode_toleratesEmptyAndGarbage() {
+        assertTrue(StepMeasure.decode(null).isEmpty())
+        assertTrue(StepMeasure.decode("").isEmpty())
+        assertEquals(1, StepMeasure.decode("bad;2026-07-01,3600000,10.0,20.0;also,bad").size)
+    }
 }

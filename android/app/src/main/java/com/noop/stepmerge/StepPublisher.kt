@@ -66,21 +66,32 @@ object StepPublisher {
         // v2 measurement gate: residual strap-vs-phone bias over the co-covered window. Accrues per run;
         // a ratio persistently off 1.0 (weighted by co-covered hours) is the only thing that justifies
         // building calibrated gap-fill. Pure measurement — changes nothing this run.
-        val bias = StepMeasure.crossSourceBias(hcTiers.firstOrNull().orEmpty(), whoop)
-        android.util.Log.i(
-            TAG,
-            "measure: co-covered=%.1fh phone=%.0f whoop=%.0f ratio(whoop/phone)=%s".format(
-                bias.coCoveredHours, bias.higherSteps, bias.lowerSteps,
-                bias.ratio?.let { "%.3f".format(it) } ?: "n/a",
-            ),
+        // Attribute THIS run's phone↔strap comparison to TODAY only (clip to local-midnight→now), fold it
+        // into the rolling per-day history (overwrite today, idempotent), and persist. Accrued every run
+        // regardless of the toggle, so the factor steadies over days and is ready when auto-cal turns on.
+        val phoneTier = hcTiers.firstOrNull().orEmpty()
+        val zoneNow = ZoneId.systemDefault()
+        val todayStartMs = java.time.LocalDate.now(zoneNow).atStartOfDay(zoneNow).toInstant().toEpochMilli()
+        val todayBias = StepMeasure.crossSourceBias(
+            StepMeasure.clip(phoneTier, todayStartMs, nowMs), StepMeasure.clip(whoop, todayStartMs, nowMs),
         )
-        // Opt-in auto-calibration: scale the strap tier toward phone truth by the measured factor, once
-        // the window holds enough overlap. Arbiter-only — the app's own displayed steps are untouched.
-        val factor = if (NoopPrefs.hcStepAutoCalibrate(context)) StepMeasure.calibrationFactor(bias) else null
+        val accrued = StepMeasure.accrue(
+            StepMeasure.decode(NoopPrefs.hcStepCalStats(context)),
+            StepMeasure.DayStat(java.time.LocalDate.now(zoneNow).toString(), todayBias.coCoveredMs, todayBias.higherSteps, todayBias.lowerSteps),
+        )
+        NoopPrefs.setHcStepCalStats(context, StepMeasure.encode(accrued))
+        val accruedHours = accrued.sumOf { it.coMs } / 3_600_000.0
+        val accruedRatio = accrued.sumOf { it.whoop }.takeIf { it > 0 }?.let { w -> accrued.sumOf { it.phone }.takeIf { it > 0 }?.let { w / it } }
+        android.util.Log.i(TAG, "measure: accrued %d day(s), co-covered=%.1fh ratio(whoop/phone)=%s".format(
+            accrued.size, accruedHours, accruedRatio?.let { "%.3f".format(it) } ?: "n/a"))
+
+        // Opt-in auto-calibration: scale the strap tier toward phone truth by the AVERAGED factor, once
+        // enough overlap has accrued. Arbiter-only — the app's own displayed steps are untouched.
+        val factor = if (NoopPrefs.hcStepAutoCalibrate(context)) StepMeasure.accruedFactor(accrued) else null
         val whoopTier = if (factor != null) whoop.map { it.copy(count = it.count * factor) } else whoop
         if (NoopPrefs.hcStepAutoCalibrate(context)) {
-            android.util.Log.i(TAG, factor?.let { "auto-cal: applied x%.3f (co-covered %.1fh)".format(it, bias.coCoveredHours) }
-                ?: "auto-cal: waiting (need >=6h co-covered, have %.1fh)".format(bias.coCoveredHours))
+            android.util.Log.i(TAG, factor?.let { "auto-cal: applied x%.3f (accrued %.1fh over %d day(s))".format(it, accruedHours, accrued.size) }
+                ?: "auto-cal: waiting (need >=6h accrued co-covered, have %.1fh)".format(accruedHours))
         }
         val tiers = hcTiers + listOf(whoopTier)
         if (tiers.all { it.isEmpty() }) { android.util.Log.i(TAG, "skip: no step data in window"); return 0 }

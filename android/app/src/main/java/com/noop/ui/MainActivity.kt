@@ -460,6 +460,17 @@ object NoopPrefs {
         of(context).edit().putBoolean(KEY_HC_STEP_AUTOCAL, enabled).apply()
     }
 
+    /** Rolling per-day phone↔strap co-covered history (StepMeasure.encode); the arbiter's auto-cal
+     *  factor is averaged over it so it steadies as days accrue. Accrued every run regardless of the
+     *  toggle, so history is ready the moment the user turns auto-cal on. */
+    const val KEY_HC_STEP_CAL_STATS = "noop.hcStepCalStats"
+
+    fun hcStepCalStats(context: Context): String = of(context).getString(KEY_HC_STEP_CAL_STATS, "") ?: ""
+
+    fun setHcStepCalStats(context: Context, value: String) {
+        of(context).edit().putString(KEY_HC_STEP_CAL_STATS, value).apply()
+    }
+
     /** Last writeback OUTCOME (#660) — surfaced in Data Sources so a silently-failing share (revoked
      *  permission, provider error) is visible instead of a healthy-looking toggle. [KEY_HC_WB_STATUS]
      *  holds a PII-safe category ([HC_WB_OK] / [HC_WB_PERMISSION_DENIED] / [HC_WB_REMOTE_ERROR]); "" = never. */

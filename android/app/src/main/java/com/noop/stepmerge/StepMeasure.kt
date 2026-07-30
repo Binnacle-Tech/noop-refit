@@ -19,6 +19,59 @@ object StepMeasure {
 
     private data class R(val start: Long, val end: Long)
 
+    // ---- Per-day accrual: average the phone↔strap comparison over a rolling history so the
+    //      calibration factor gets steadier as days accumulate, instead of riding a 3-day window. ----
+
+    /** One calendar day's co-covered comparison. Stored, one per day, and summed for the factor. */
+    data class DayStat(val day: String, val coMs: Long, val phone: Double, val whoop: Double)
+
+    /** Trim + prorate [ivs] to the half-open window [startMs, endMs) — used to attribute a run's
+     *  measurement to TODAY only, so each day is sampled once rather than re-counted every 15-min run. */
+    fun clip(ivs: List<StepInterval>, startMs: Long, endMs: Long): List<StepInterval> {
+        if (endMs <= startMs) return emptyList()
+        val out = ArrayList<StepInterval>()
+        for (iv in ivs) {
+            if (iv.durationMs == 0L) continue
+            val s = maxOf(iv.startMs, startMs)
+            val e = minOf(iv.endMs, endMs)
+            if (e > s) out += StepInterval(s, e, iv.count * (e - s).toDouble() / iv.durationMs)
+        }
+        return out
+    }
+
+    /** Fold [today] into [prior], overwriting any existing entry for the same day (recomputing today
+     *  each run is idempotent), newest-first, keeping at most [keepDays] — a rolling history. */
+    fun accrue(prior: List<DayStat>, today: DayStat, keepDays: Int = 21): List<DayStat> =
+        (listOf(today) + prior.filter { it.day != today.day })
+            .sortedByDescending { it.day }
+            .take(keepDays)
+
+    /** Calibration factor from the ACCRUED history: `phone / whoop` summed over all stored days, gated
+     *  on total co-covered hours + a sane band (same guard as the single-window [calibrationFactor], but
+     *  now the sample grows with time so it converges instead of sliding). Null = leave the strap raw. */
+    fun accruedFactor(stats: List<DayStat>, minCoCoveredHours: Double = 6.0): Double? {
+        val phone = stats.sumOf { it.phone }
+        val whoop = stats.sumOf { it.whoop }
+        val coHours = stats.sumOf { it.coMs } / 3_600_000.0
+        if (phone <= 0.0 || whoop <= 0.0 || coHours < minCoCoveredHours) return null
+        val ratio = whoop / phone
+        if (ratio !in 0.5..40.0) return null
+        return 1.0 / ratio
+    }
+
+    /** Compact, locale-stable serialization for a prefs string: `day,coMs,phone,whoop;…`. */
+    fun encode(stats: List<DayStat>): String =
+        stats.joinToString(";") { "%s,%d,%.2f,%.2f".format(java.util.Locale.US, it.day, it.coMs, it.phone, it.whoop) }
+
+    fun decode(s: String?): List<DayStat> {
+        if (s.isNullOrBlank()) return emptyList()
+        return s.split(";").mapNotNull { row ->
+            val p = row.split(",")
+            if (p.size != 4) return@mapNotNull null
+            runCatching { DayStat(p[0], p[1].toLong(), p[2].toDouble(), p[3].toDouble()) }.getOrNull()
+        }
+    }
+
     data class CrossSourceBias(
         val coCoveredMs: Long,
         val higherSteps: Double,   // higher-ranked source (phone) within the co-covered window
