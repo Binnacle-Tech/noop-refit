@@ -26,6 +26,7 @@ object StepPublisher {
 
     private const val WINDOW_DAYS = 3L
     private const val HOUR_MS = 3_600_000L
+    private const val TAG = "NoopHC"
 
     /** Read phone steps + write the collated total; both scopes requested when the toggle is enabled. */
     val PERMISSIONS: Set<String> = setOf(
@@ -40,8 +41,10 @@ object StepPublisher {
      * (HC throws SecurityException otherwise — caller wraps in runCatching, same as the other writebacks).
      */
     suspend fun publish(context: Context, repo: WhoopRepository, deviceId: String): Int {
-        if (!NoopPrefs.hcWriteSteps(context)) return 0
-        if (HealthConnectClient.getSdkStatus(context) != HealthConnectClient.SDK_AVAILABLE) return 0
+        if (!NoopPrefs.hcWriteSteps(context)) { android.util.Log.i(TAG, "skip: toggle off"); return 0 }
+        if (HealthConnectClient.getSdkStatus(context) != HealthConnectClient.SDK_AVAILABLE) {
+            android.util.Log.i(TAG, "skip: HC unavailable"); return 0
+        }
         val client = HealthConnectClient.getOrCreate(context)
 
         val nowMs = System.currentTimeMillis()
@@ -58,10 +61,12 @@ object StepPublisher {
         }
 
         // Ranked tiers: HC pedometers (dominant first) then Whoop last, and arbitrate.
-        val tiers = StepSources.hcIntervalTiers(client, context, fromMs, nowMs) + listOf(whoop)
-        if (tiers.all { it.isEmpty() }) return 0
+        val hcTiers = StepSources.hcIntervalTiers(client, context, fromMs, nowMs)
+        val tiers = hcTiers + listOf(whoop)
+        android.util.Log.i(TAG, "sources: ${hcTiers.size} HC tier(s) sized ${hcTiers.map { it.size }}, whoop=${whoop.size} intervals")
+        if (tiers.all { it.isEmpty() }) { android.util.Log.i(TAG, "skip: no step data in window"); return 0 }
         val hours = StepArbiter.bucketByHour(StepArbiter.arbitrate(tiers))
-        if (hours.isEmpty()) return 0
+        if (hours.isEmpty()) { android.util.Log.i(TAG, "skip: arbitration produced no hours"); return 0 }
 
         val zone = ZoneId.systemDefault()
         val version = nowMs / 1000
@@ -78,8 +83,10 @@ object StepPublisher {
                 metadata = Metadata(clientRecordId = "noop-steps-$hour", clientRecordVersion = version),
             )
         }
-        if (records.isEmpty()) return 0
-        records.chunked(1000).forEach { client.insertRecords(it) }
+        if (records.isEmpty()) { android.util.Log.i(TAG, "skip: every hour rounded to <1 step"); return 0 }
+        runCatching { records.chunked(1000).forEach { client.insertRecords(it) } }
+            .onSuccess { android.util.Log.i(TAG, "published ${records.size} hour-bucket StepsRecord(s)") }
+            .onFailure { android.util.Log.w(TAG, "step publish FAILED", it); throw it }
         return records.size
     }
 }
