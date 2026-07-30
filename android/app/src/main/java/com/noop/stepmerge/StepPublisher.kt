@@ -64,6 +64,17 @@ object StepPublisher {
         val hcTiers = StepSources.hcIntervalTiers(client, context, fromMs, nowMs)
         val tiers = hcTiers + listOf(whoop)
         android.util.Log.i(TAG, "sources: ${hcTiers.size} HC tier(s) sized ${hcTiers.map { it.size }}, whoop=${whoop.size} intervals")
+        // v2 measurement gate: residual strap-vs-phone bias over the co-covered window. Accrues per run;
+        // a ratio persistently off 1.0 (weighted by co-covered hours) is the only thing that justifies
+        // building calibrated gap-fill. Pure measurement — changes nothing this run.
+        val bias = StepMeasure.crossSourceBias(hcTiers.firstOrNull().orEmpty(), whoop)
+        android.util.Log.i(
+            TAG,
+            "measure: co-covered=%.1fh phone=%.0f whoop=%.0f ratio(whoop/phone)=%s".format(
+                bias.coCoveredHours, bias.higherSteps, bias.lowerSteps,
+                bias.ratio?.let { "%.3f".format(it) } ?: "n/a",
+            ),
+        )
         if (tiers.all { it.isEmpty() }) { android.util.Log.i(TAG, "skip: no step data in window"); return 0 }
         val hours = StepArbiter.bucketByHour(StepArbiter.arbitrate(tiers))
         if (hours.isEmpty()) { android.util.Log.i(TAG, "skip: arbitration produced no hours"); return 0 }
