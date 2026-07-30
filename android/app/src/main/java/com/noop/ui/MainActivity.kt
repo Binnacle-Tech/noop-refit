@@ -471,14 +471,15 @@ object NoopPrefs {
         of(context).edit().putString(KEY_HC_STEP_CAL_STATS, value).apply()
     }
 
-    /** One-time guard: the arbiter seeds its calibration history from ~30 days of existing WHOOP + phone
-     *  data on first run, so the factor is trustworthy immediately rather than learned forward from zero. */
-    const val KEY_HC_STEP_CAL_SEEDED = "noop.hcStepCalSeeded"
+    /** The seed WIDTH (days) already backfilled into the calibration history. The arbiter seeds once per
+     *  window size, so widening the seed later triggers exactly one re-seed (0 = never seeded). Keeps the
+     *  factor trustworthy from existing WHOOP + phone data without re-reading history every run. */
+    const val KEY_HC_STEP_CAL_SEED_DAYS = "noop.hcStepCalSeedDays"
 
-    fun hcStepCalSeeded(context: Context): Boolean = of(context).getBoolean(KEY_HC_STEP_CAL_SEEDED, false)
+    fun hcStepCalSeededDays(context: Context): Int = of(context).getInt(KEY_HC_STEP_CAL_SEED_DAYS, 0)
 
-    fun setHcStepCalSeeded(context: Context, seeded: Boolean) {
-        of(context).edit().putBoolean(KEY_HC_STEP_CAL_SEEDED, seeded).apply()
+    fun setHcStepCalSeededDays(context: Context, days: Int) {
+        of(context).edit().putInt(KEY_HC_STEP_CAL_SEED_DAYS, days).apply()
     }
 
     /** Last writeback OUTCOME (#660) — surfaced in Data Sources so a silently-failing share (revoked

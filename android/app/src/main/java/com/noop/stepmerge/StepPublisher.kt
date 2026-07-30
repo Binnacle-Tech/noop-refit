@@ -75,14 +75,15 @@ object StepPublisher {
         val todayBias = StepMeasure.crossSourceBias(
             StepMeasure.clip(phoneTier, todayStartMs, nowMs), StepMeasure.clip(whoop, todayStartMs, nowMs),
         )
-        // One-time backfill: seed the calibration history from ~30 days of EXISTING WHOOP + phone data
-        // so the factor is trustworthy on day one instead of learned forward from zero. Guarded, runs once.
+        // Backfill the calibration history from ~SEED_DAYS of EXISTING WHOOP + phone data so the factor is
+        // trustworthy immediately instead of learned forward from zero. Keyed by the seed WIDTH: it runs
+        // once per window size, so widening SEED_DAYS later triggers exactly one re-seed (never per-run).
         var priorStats = StepMeasure.decode(NoopPrefs.hcStepCalStats(context))
-        if (!NoopPrefs.hcStepCalSeeded(context)) {
-            priorStats = seedFromHistory(client, context, repo, deviceId, zoneNow, nowMs)
-            NoopPrefs.setHcStepCalStats(context, StepMeasure.encode(priorStats))
-            NoopPrefs.setHcStepCalSeeded(context, true)
-            android.util.Log.i(TAG, "seed: backfilled ${priorStats.size} day(s) from history")
+        if (NoopPrefs.hcStepCalSeededDays(context) < SEED_DAYS) {
+            val seed = seedFromHistory(client, context, repo, deviceId, zoneNow, nowMs)
+            if (seed.isNotEmpty()) priorStats = seed
+            NoopPrefs.setHcStepCalSeededDays(context, SEED_DAYS)
+            android.util.Log.i(TAG, "seed: backfilled ${seed.size} day(s) with overlap from ${SEED_DAYS}d history")
         }
         val accrued = StepMeasure.accrue(
             priorStats,
@@ -100,7 +101,7 @@ object StepPublisher {
         val whoopTier = if (factor != null) whoop.map { it.copy(count = it.count * factor) } else whoop
         if (NoopPrefs.hcStepAutoCalibrate(context)) {
             android.util.Log.i(TAG, factor?.let { "auto-cal: applied x%.3f (accrued %.1fh over %d day(s))".format(it, accruedHours, accrued.size) }
-                ?: "auto-cal: waiting (need >=6h accrued co-covered, have %.1fh)".format(accruedHours))
+                ?: "auto-cal: waiting (need >=3h accrued co-covered, have %.1fh)".format(accruedHours))
         }
         val tiers = hcTiers + listOf(whoopTier)
         if (tiers.all { it.isEmpty() }) { android.util.Log.i(TAG, "skip: no step data in window"); return 0 }
@@ -132,7 +133,7 @@ object StepPublisher {
     /** One-time calibration backfill: bucket ~30 days of existing phone (HC) + strap (internal) steps
      *  into per-day co-covered stats, so auto-cal has a confident factor immediately. Reads wider than
      *  the publish window, but only once (guarded by the seeded flag). */
-    private const val SEED_DAYS = 30
+    private const val SEED_DAYS = 60
 
     private suspend fun seedFromHistory(
         client: HealthConnectClient,
@@ -155,7 +156,7 @@ object StepPublisher {
             val e = minOf(d.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli(), nowMs)
             StepMeasure.DayWindow(d.toString(), s, e)
         }
-        // Keep the freshest ~21 days with real overlap — aligns with the rolling accrual cap.
-        return StepMeasure.perDayStats(phone, whoop, windows).sortedByDescending { it.day }.take(21)
+        // Keep the freshest days with real overlap — aligns with the rolling accrual cap.
+        return StepMeasure.perDayStats(phone, whoop, windows).sortedByDescending { it.day }.take(SEED_DAYS)
     }
 }

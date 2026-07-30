@@ -128,8 +128,8 @@ class StepMeasureTest {
             day("2026-07-03", 2.0, 300.0, 750.0),
         )
         assertEquals(0.4, StepMeasure.accruedFactor(stats)!!, 1e-9)
-        // Same ratio but only 4h total accrued → still waiting.
-        assertNull(StepMeasure.accruedFactor(listOf(day("2026-07-01", 4.0, 1000.0, 2500.0))))
+        // Same ratio but only 2h total accrued → still below the 3h gate.
+        assertNull(StepMeasure.accruedFactor(listOf(day("2026-07-01", 2.0, 1000.0, 2500.0))))
     }
 
     @Test fun encodeDecode_roundTrips() {

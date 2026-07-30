@@ -120,7 +120,7 @@ private fun stepCalibrationReadout(context: android.content.Context): String {
     return if (com.noop.stepmerge.StepMeasure.accruedFactor(stats) != null) {
         "Learned: strap reads %.2f× your phone · %.0fh over %d %s".format(ratio, hours, days, d)
     } else {
-        "Learning: %.1fh of overlap so far (needs 6h) · %d %s".format(hours, days, d)
+        "Learning: %.1fh of overlap so far (needs 3h) · %d %s".format(hours, days, d)
     }
 }
 
