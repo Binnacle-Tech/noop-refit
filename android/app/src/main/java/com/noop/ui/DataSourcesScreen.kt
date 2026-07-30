@@ -104,6 +104,26 @@ import kotlinx.coroutines.withContext
  *   - Backup        — Export / Import the whole on-device database through [DataBackup],
  *                     wired to ActivityResult document launchers.
  */
+/** Human-readable summary of the arbiter's learned strap↔phone calibration, from the accrued per-day
+ *  history in prefs. Shown under the auto-cal toggle so the opt-in decision is informed. */
+private fun stepCalibrationReadout(context: android.content.Context): String {
+    val stats = com.noop.stepmerge.StepMeasure.decode(NoopPrefs.hcStepCalStats(context))
+    val hours = stats.sumOf { it.coMs } / 3_600_000.0
+    val phone = stats.sumOf { it.phone }
+    val whoop = stats.sumOf { it.whoop }
+    if (stats.isEmpty() || phone <= 0.0 || whoop <= 0.0) {
+        return "No phone overlap yet — carry your phone while wearing the strap to learn its scale."
+    }
+    val ratio = whoop / phone
+    val days = stats.size
+    val d = if (days == 1) "day" else "days"
+    return if (com.noop.stepmerge.StepMeasure.accruedFactor(stats) != null) {
+        "Learned: strap reads %.2f× your phone · %.0fh over %d %s".format(ratio, hours, days, d)
+    } else {
+        "Learning: %.1fh of overlap so far (needs 6h) · %d %s".format(hours, days, d)
+    }
+}
+
 @Composable
 fun DataSourcesScreen(vm: AppViewModel) {
     val context = LocalContext.current
@@ -121,6 +141,10 @@ fun DataSourcesScreen(vm: AppViewModel) {
     val hcWriteSteps by vm.hcWriteSteps.collectAsStateWithLifecycle()
     val hcStepAutoCalibrate by vm.hcStepAutoCalibrate.collectAsStateWithLifecycle()
     val hcWbStatus by vm.hcWritebackStatus.collectAsStateWithLifecycle()
+    // Learned strap↔phone calibration readout (accrued every run, shown so the opt-in is informed).
+    // Re-read on entry + when the toggle flips; a background publish updates it by next screen open.
+    var stepCalReadout by remember { mutableStateOf(stepCalibrationReadout(context)) }
+    LaunchedEffect(hcStepAutoCalibrate, hcWriteSteps) { stepCalReadout = stepCalibrationReadout(context) }
     // A background (BLE-path) writeback updates prefs, not the VM's flow — re-read on entry so the
     // status line reflects the latest attempt whenever this screen is opened (#660).
     LaunchedEffect(Unit) { vm.refreshHcWritebackStatus() }
@@ -688,6 +712,12 @@ fun DataSourcesScreen(vm: AppViewModel) {
                                         "enough overlap. Only affects the collated total, not your step tile.",
                                     style = NoopType.footnote,
                                     color = Palette.textTertiary,
+                                )
+                                Text(
+                                    stepCalReadout,
+                                    style = NoopType.footnote,
+                                    color = Palette.accent,
+                                    modifier = Modifier.padding(top = 4.dp),
                                 )
                             }
                             Switch(
