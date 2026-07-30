@@ -118,6 +118,7 @@ fun DataSourcesScreen(vm: AppViewModel) {
     val hcLastSync by vm.hcLastSync.collectAsStateWithLifecycle()
     val hcWriteback by vm.hcWriteback.collectAsStateWithLifecycle()
     val hcWriteActiveKcal by vm.hcWriteActiveKcal.collectAsStateWithLifecycle()
+    val hcWriteSteps by vm.hcWriteSteps.collectAsStateWithLifecycle()
     val hcWbStatus by vm.hcWritebackStatus.collectAsStateWithLifecycle()
     // A background (BLE-path) writeback updates prefs, not the VM's flow — re-read on entry so the
     // status line reflects the latest attempt whenever this screen is opened (#660).
@@ -373,6 +374,32 @@ fun DataSourcesScreen(vm: AppViewModel) {
         }
     }
 
+    // Step arbiter (com.noop.stepmerge) opt-in: needs READ + WRITE steps (read the phone's steps, write
+    // the collated total). Denial flips the toggle back off so the UI never claims it's publishing.
+    val hcStepsPermissionLauncher = rememberLauncherForActivityResult(
+        PermissionController.createRequestPermissionResultContract(),
+    ) { granted ->
+        if (granted.containsAll(com.noop.stepmerge.StepPublisher.PERMISSIONS)) {
+            vm.writebackHealthConnectNow()
+        } else {
+            vm.setHcWriteSteps(false)
+            Toast.makeText(context, "Step read/write access not granted.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun startStepArbiter() {
+        scope.launch {
+            val granted = runCatching {
+                HealthConnectImporter.client(context).permissionController.getGrantedPermissions()
+            }.getOrDefault(emptySet())
+            if (granted.containsAll(com.noop.stepmerge.StepPublisher.PERMISSIONS)) {
+                vm.writebackHealthConnectNow()
+            } else {
+                hcStepsPermissionLauncher.launch(com.noop.stepmerge.StepPublisher.PERMISSIONS)
+            }
+        }
+    }
+
     // PERF (#707): lazy scaffold — each SourceCard is an unconditional top-level child, so each becomes one
     // `item { }` in the same order. There are no standalone Spacers (the eager column relied on
     // `spacedBy(20.dp)`, which the LazyColumn reproduces), so spacing is byte-identical. Only the on-screen
@@ -606,6 +633,42 @@ fun DataSourcesScreen(vm: AppViewModel) {
                             ),
                             modifier = Modifier.semantics {
                                 contentDescription = "Also share active calories to Health Connect"
+                            },
+                        )
+                    }
+                    // Step arbiter opt-in (com.noop.stepmerge): collate phone + Whoop steps into one total
+                    // published for Ledger. Off by default — writing steps double-counts for naive HC
+                    // readers, so only turn it on if your step consumer reads Noop's origin exclusively.
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Publish collated steps", style = NoopType.subhead, color = Palette.textPrimary)
+                            Text(
+                                "Merge phone and strap steps into one total in Health Connect (phone where " +
+                                    "it's carried, strap in the gaps). For apps that read only NOOP's steps — " +
+                                    "a naive reader will double-count against the phone's own.",
+                                style = NoopType.footnote,
+                                color = Palette.textTertiary,
+                            )
+                        }
+                        Switch(
+                            checked = hcWriteSteps,
+                            onCheckedChange = { on ->
+                                vm.setHcWriteSteps(on)
+                                if (on) startStepArbiter()
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Palette.surfaceBase,
+                                checkedTrackColor = Palette.accent,
+                                uncheckedThumbColor = Palette.textSecondary,
+                                uncheckedTrackColor = Palette.surfaceInset,
+                                uncheckedBorderColor = Palette.hairline,
+                            ),
+                            modifier = Modifier.semantics {
+                                contentDescription = "Publish collated steps to Health Connect"
                             },
                         )
                     }

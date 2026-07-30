@@ -1015,6 +1015,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 // update) break the analysis loop.
                 if (_hcWriteback.value) {
                     runCatching { HealthConnectWriter.write(appContext, repository, deviceId) }
+                    // Step arbiter (com.noop.stepmerge): opt-in, self-gated, cold call — no-ops unless the
+                    // Data Sources toggle is on. Kept beside the writeback trigger, not in the writer.
+                    runCatching { com.noop.stepmerge.StepPublisher.publish(appContext, repository, deviceId) }
                     refreshHcWritebackStatus()   // #660: reflect the outcome the writer just persisted
                 }
                 // 15-min backstop cadence, but wake EARLY on an app-resume kick (#386 self-heal) so a
@@ -2007,6 +2010,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val hcWriteback: StateFlow<Boolean> = _hcWriteback.asStateFlow()
     private val _hcWriteActiveKcal = MutableStateFlow(NoopPrefs.hcWriteActiveKcal(appContext))
     val hcWriteActiveKcal: StateFlow<Boolean> = _hcWriteActiveKcal.asStateFlow()
+    private val _hcWriteSteps = MutableStateFlow(NoopPrefs.hcWriteSteps(appContext))
+    val hcWriteSteps: StateFlow<Boolean> = _hcWriteSteps.asStateFlow()
 
     // Last writeback outcome (#660). Read from prefs (the writer persists it — including on the
     // background BLE path, which never touches this VM), so Data Sources shows a failing share
@@ -2069,11 +2074,20 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         NoopPrefs.setHcWriteActiveKcal(appContext, enabled)
     }
 
+    /** Flip the opt-in step arbiter (com.noop.stepmerge). Persists; the UI requests WRITE/READ steps and
+     *  kicks a publish on enable. The writeback trigger reads the pref each run, so no further plumbing. */
+    fun setHcWriteSteps(enabled: Boolean) {
+        _hcWriteSteps.value = enabled
+        NoopPrefs.setHcWriteSteps(appContext, enabled)
+    }
+
     /** One immediate writeback (permissions assumed granted — the UI gates on that). */
     fun writebackHealthConnectNow() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 runCatching { HealthConnectWriter.write(appContext, repository, deviceId) }
+                // Step arbiter — opt-in, self-gated (no-ops unless the toggle is on). Same cold trigger.
+                runCatching { com.noop.stepmerge.StepPublisher.publish(appContext, repository, deviceId) }
             }
             refreshHcWritebackStatus()   // #660: surface the just-recorded outcome in Data Sources
         }

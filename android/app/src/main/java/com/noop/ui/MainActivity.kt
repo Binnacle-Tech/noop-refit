@@ -433,6 +433,20 @@ object NoopPrefs {
         of(context).edit().putBoolean(KEY_HC_WRITE_ACTIVE_KCAL, enabled).apply()
     }
 
+    /** Opt-in multi-source step arbiter (com.noop.stepmerge): collate phone/watch (HC) + Whoop
+     *  (internal) into one gap-filled step total and publish it to Health Connect under Noop's origin
+     *  for Ledger. Default OFF — writing steps double-counts against the phone's own steps for any naive
+     *  HC reader, so only a user who wants the collated total (and whose Ledger reads only our origin)
+     *  turns it on. Gated in [com.noop.stepmerge.StepPublisher.publish]. */
+    const val KEY_HC_WRITE_STEPS = "noop.hcWriteSteps"
+
+    fun hcWriteSteps(context: Context): Boolean =
+        of(context).getBoolean(KEY_HC_WRITE_STEPS, false)
+
+    fun setHcWriteSteps(context: Context, enabled: Boolean) {
+        of(context).edit().putBoolean(KEY_HC_WRITE_STEPS, enabled).apply()
+    }
+
     /** Last writeback OUTCOME (#660) — surfaced in Data Sources so a silently-failing share (revoked
      *  permission, provider error) is visible instead of a healthy-looking toggle. [KEY_HC_WB_STATUS]
      *  holds a PII-safe category ([HC_WB_OK] / [HC_WB_PERMISSION_DENIED] / [HC_WB_REMOTE_ERROR]); "" = never. */
