@@ -140,6 +140,31 @@ class StepMeasureTest {
         assertEquals(2.5 * H, back[1].coMs.toDouble(), 0.0)
     }
 
+    @Test fun perDayStats_bucketsHistoryPerDay_skipsNoOverlapDays() {
+        // Two day windows of 1h each. Day A: phone 100 & whoop 250 overlap → ratio 2.5. Day B: only
+        // whoop recorded (no phone) → no co-covered → skipped.
+        val phone = listOf(iv(0, H, 100.0))                 // day A window [0, H)
+        val whoop = listOf(iv(0, H, 250.0), iv(H, 2 * H, 300.0))
+        val windows = listOf(
+            StepMeasure.DayWindow("2026-07-01", 0, H),
+            StepMeasure.DayWindow("2026-07-02", H, 2 * H),
+        )
+        val out = StepMeasure.perDayStats(phone, whoop, windows)
+        assertEquals(listOf("2026-07-01"), out.map { it.day })   // day B dropped (no phone overlap)
+        assertEquals(100.0, out.single().phone, 1e-9)
+        assertEquals(250.0, out.single().whoop, 1e-9)
+    }
+
+    @Test fun perDayStats_feedsAccruedFactor() {
+        // A week of consistent 2.5x days seeds an immediately-confident factor.
+        val phone = listOf(iv(0, 8 * H, 800.0))
+        val whoop = listOf(iv(0, 8 * H, 2000.0))
+        val windows = (0 until 8).map { StepMeasure.DayWindow("d$it", it * H, (it + 1) * H) }
+        val seeded = StepMeasure.perDayStats(phone, whoop, windows)
+        assertEquals(8, seeded.size)
+        assertEquals(0.4, StepMeasure.accruedFactor(seeded)!!, 1e-9)   // 8h co-covered, ratio 2.5
+    }
+
     @Test fun decode_toleratesEmptyAndGarbage() {
         assertTrue(StepMeasure.decode(null).isEmpty())
         assertTrue(StepMeasure.decode("").isEmpty())

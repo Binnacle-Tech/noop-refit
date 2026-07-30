@@ -75,8 +75,17 @@ object StepPublisher {
         val todayBias = StepMeasure.crossSourceBias(
             StepMeasure.clip(phoneTier, todayStartMs, nowMs), StepMeasure.clip(whoop, todayStartMs, nowMs),
         )
+        // One-time backfill: seed the calibration history from ~30 days of EXISTING WHOOP + phone data
+        // so the factor is trustworthy on day one instead of learned forward from zero. Guarded, runs once.
+        var priorStats = StepMeasure.decode(NoopPrefs.hcStepCalStats(context))
+        if (!NoopPrefs.hcStepCalSeeded(context)) {
+            priorStats = seedFromHistory(client, context, repo, deviceId, zoneNow, nowMs)
+            NoopPrefs.setHcStepCalStats(context, StepMeasure.encode(priorStats))
+            NoopPrefs.setHcStepCalSeeded(context, true)
+            android.util.Log.i(TAG, "seed: backfilled ${priorStats.size} day(s) from history")
+        }
         val accrued = StepMeasure.accrue(
-            StepMeasure.decode(NoopPrefs.hcStepCalStats(context)),
+            priorStats,
             StepMeasure.DayStat(java.time.LocalDate.now(zoneNow).toString(), todayBias.coCoveredMs, todayBias.higherSteps, todayBias.lowerSteps),
         )
         NoopPrefs.setHcStepCalStats(context, StepMeasure.encode(accrued))
@@ -118,5 +127,35 @@ object StepPublisher {
             .onSuccess { android.util.Log.i(TAG, "published ${records.size} hour-bucket StepsRecord(s)") }
             .onFailure { android.util.Log.w(TAG, "step publish FAILED", it); throw it }
         return records.size
+    }
+
+    /** One-time calibration backfill: bucket ~30 days of existing phone (HC) + strap (internal) steps
+     *  into per-day co-covered stats, so auto-cal has a confident factor immediately. Reads wider than
+     *  the publish window, but only once (guarded by the seeded flag). */
+    private const val SEED_DAYS = 30
+
+    private suspend fun seedFromHistory(
+        client: HealthConnectClient,
+        context: Context,
+        repo: WhoopRepository,
+        deviceId: String,
+        zone: ZoneId,
+        nowMs: Long,
+    ): List<StepMeasure.DayStat> {
+        val fromMs = nowMs - SEED_DAYS * 86_400_000L
+        val phone = StepSources.hcIntervalTiers(client, context, fromMs, nowMs).firstOrNull().orEmpty()
+        val ticksPerStep = ProfileStore.from(context).stepTicksPerStep
+        val whoop = ArrayList<StepInterval>()
+        for (id in repo.importedSourceIds(deviceId)) {
+            whoop += StepSources.whoopIntervals(repo.stepSamples(id, fromMs / 1000, nowMs / 1000), ticksPerStep)
+        }
+        val windows = (0 until SEED_DAYS).map { back ->
+            val d = java.time.LocalDate.now(zone).minusDays(back.toLong())
+            val s = d.atStartOfDay(zone).toInstant().toEpochMilli()
+            val e = minOf(d.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli(), nowMs)
+            StepMeasure.DayWindow(d.toString(), s, e)
+        }
+        // Keep the freshest ~21 days with real overlap — aligns with the rolling accrual cap.
+        return StepMeasure.perDayStats(phone, whoop, windows).sortedByDescending { it.day }.take(21)
     }
 }

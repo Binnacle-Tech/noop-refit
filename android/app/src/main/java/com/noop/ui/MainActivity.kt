@@ -471,6 +471,16 @@ object NoopPrefs {
         of(context).edit().putString(KEY_HC_STEP_CAL_STATS, value).apply()
     }
 
+    /** One-time guard: the arbiter seeds its calibration history from ~30 days of existing WHOOP + phone
+     *  data on first run, so the factor is trustworthy immediately rather than learned forward from zero. */
+    const val KEY_HC_STEP_CAL_SEEDED = "noop.hcStepCalSeeded"
+
+    fun hcStepCalSeeded(context: Context): Boolean = of(context).getBoolean(KEY_HC_STEP_CAL_SEEDED, false)
+
+    fun setHcStepCalSeeded(context: Context, seeded: Boolean) {
+        of(context).edit().putBoolean(KEY_HC_STEP_CAL_SEEDED, seeded).apply()
+    }
+
     /** Last writeback OUTCOME (#660) — surfaced in Data Sources so a silently-failing share (revoked
      *  permission, provider error) is visible instead of a healthy-looking toggle. [KEY_HC_WB_STATUS]
      *  holds a PII-safe category ([HC_WB_OK] / [HC_WB_PERMISSION_DENIED] / [HC_WB_REMOTE_ERROR]); "" = never. */

@@ -25,6 +25,22 @@ object StepMeasure {
     /** One calendar day's co-covered comparison. Stored, one per day, and summed for the factor. */
     data class DayStat(val day: String, val coMs: Long, val phone: Double, val whoop: Double)
 
+    /** A calendar day's local-time bounds (the caller supplies these using its ZoneId). */
+    data class DayWindow(val day: String, val startMs: Long, val endMs: Long)
+
+    /** Bucket a whole history of intervals into per-day [DayStat]s over [days] — the one-time seed that
+     *  turns months of existing WHOOP + phone data into an immediately-trustworthy calibration, instead
+     *  of learning forward from zero. Only days with real overlap are returned. Pure; the caller builds
+     *  the day windows (needs the timezone) and reads the source intervals. */
+    fun perDayStats(higher: List<StepInterval>, lower: List<StepInterval>, days: List<DayWindow>): List<DayStat> {
+        val out = ArrayList<DayStat>()
+        for (w in days) {
+            val b = crossSourceBias(clip(higher, w.startMs, w.endMs), clip(lower, w.startMs, w.endMs))
+            if (b.coCoveredMs > 0) out += DayStat(w.day, b.coCoveredMs, b.higherSteps, b.lowerSteps)
+        }
+        return out
+    }
+
     /** Trim + prorate [ivs] to the half-open window [startMs, endMs) — used to attribute a run's
      *  measurement to TODAY only, so each day is sampled once rather than re-counted every 15-min run. */
     fun clip(ivs: List<StepInterval>, startMs: Long, endMs: Long): List<StepInterval> {
