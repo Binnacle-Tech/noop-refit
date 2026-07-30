@@ -119,6 +119,7 @@ fun DataSourcesScreen(vm: AppViewModel) {
     val hcWriteback by vm.hcWriteback.collectAsStateWithLifecycle()
     val hcWriteActiveKcal by vm.hcWriteActiveKcal.collectAsStateWithLifecycle()
     val hcWriteSteps by vm.hcWriteSteps.collectAsStateWithLifecycle()
+    val hcStepAutoCalibrate by vm.hcStepAutoCalibrate.collectAsStateWithLifecycle()
     val hcWbStatus by vm.hcWritebackStatus.collectAsStateWithLifecycle()
     // A background (BLE-path) writeback updates prefs, not the VM's flow — re-read on entry so the
     // status line reflects the latest attempt whenever this screen is opened (#660).
@@ -671,6 +672,39 @@ fun DataSourcesScreen(vm: AppViewModel) {
                                 contentDescription = "Publish collated steps to Health Connect"
                             },
                         )
+                    }
+                    // Nested opt-in (only while publishing): auto-calibrate the strap against the phone.
+                    if (hcWriteSteps) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Auto-calibrate strap to phone", style = NoopType.subhead, color = Palette.textPrimary)
+                                Text(
+                                    "Match the strap's step scale to your phone automatically, using the " +
+                                        "hours you carried both. No manual tuning — kicks in once there's " +
+                                        "enough overlap. Only affects the collated total, not your step tile.",
+                                    style = NoopType.footnote,
+                                    color = Palette.textTertiary,
+                                )
+                            }
+                            Switch(
+                                checked = hcStepAutoCalibrate,
+                                onCheckedChange = { on -> vm.setHcStepAutoCalibrate(on) },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Palette.surfaceBase,
+                                    checkedTrackColor = Palette.accent,
+                                    uncheckedThumbColor = Palette.textSecondary,
+                                    uncheckedTrackColor = Palette.surfaceInset,
+                                    uncheckedBorderColor = Palette.hairline,
+                                ),
+                                modifier = Modifier.semantics {
+                                    contentDescription = "Auto-calibrate strap steps to phone"
+                                },
+                            )
+                        }
                     }
                 }
                 // #660: surface the last writeback OUTCOME so a silently-failing share (revoked

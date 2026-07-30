@@ -62,7 +62,6 @@ object StepPublisher {
 
         // Ranked tiers: HC pedometers (dominant first) then Whoop last, and arbitrate.
         val hcTiers = StepSources.hcIntervalTiers(client, context, fromMs, nowMs)
-        val tiers = hcTiers + listOf(whoop)
         android.util.Log.i(TAG, "sources: ${hcTiers.size} HC tier(s) sized ${hcTiers.map { it.size }}, whoop=${whoop.size} intervals")
         // v2 measurement gate: residual strap-vs-phone bias over the co-covered window. Accrues per run;
         // a ratio persistently off 1.0 (weighted by co-covered hours) is the only thing that justifies
@@ -75,6 +74,15 @@ object StepPublisher {
                 bias.ratio?.let { "%.3f".format(it) } ?: "n/a",
             ),
         )
+        // Opt-in auto-calibration: scale the strap tier toward phone truth by the measured factor, once
+        // the window holds enough overlap. Arbiter-only — the app's own displayed steps are untouched.
+        val factor = if (NoopPrefs.hcStepAutoCalibrate(context)) StepMeasure.calibrationFactor(bias) else null
+        val whoopTier = if (factor != null) whoop.map { it.copy(count = it.count * factor) } else whoop
+        if (NoopPrefs.hcStepAutoCalibrate(context)) {
+            android.util.Log.i(TAG, factor?.let { "auto-cal: applied x%.3f (co-covered %.1fh)".format(it, bias.coCoveredHours) }
+                ?: "auto-cal: waiting (need >=6h co-covered, have %.1fh)".format(bias.coCoveredHours))
+        }
+        val tiers = hcTiers + listOf(whoopTier)
         if (tiers.all { it.isEmpty() }) { android.util.Log.i(TAG, "skip: no step data in window"); return 0 }
         val hours = StepArbiter.bucketByHour(StepArbiter.arbitrate(tiers))
         if (hours.isEmpty()) { android.util.Log.i(TAG, "skip: arbitration produced no hours"); return 0 }

@@ -68,4 +68,29 @@ class StepMeasureTest {
         val whoop = listOf(iv(0, 100, 50.0))
         assertTrue(StepMeasure.crossSourceBias(phone, whoop).ratio == null)
     }
+
+    // ---- calibrationFactor: the opt-in auto-cal gate ----
+
+    private val H = 3_600_000L
+    private fun bias(hours: Double, higher: Double, lower: Double) =
+        StepMeasure.CrossSourceBias((hours * H).toLong(), higher, lower)
+
+    @Test fun factor_appliesInverseRatio_whenConfident() {
+        // 7h co-covered, strap reads 2.5x phone → scale strap by 1/2.5 = 0.4.
+        assertEquals(0.4, StepMeasure.calibrationFactor(bias(7.0, 1000.0, 2500.0))!!, 1e-9)
+    }
+
+    @Test fun factor_nullBelowMinCoCoveredHours() {
+        // Same 2.5x bias but only 1h overlap → too thin, leave the strap raw.
+        assertNull(StepMeasure.calibrationFactor(bias(1.0, 1000.0, 2500.0)))
+    }
+
+    @Test fun factor_nullWhenRatioOutOfSaneBand() {
+        // 50x is beyond the guard band (a freak window) → no correction.
+        assertNull(StepMeasure.calibrationFactor(bias(8.0, 100.0, 5000.0)))
+    }
+
+    @Test fun factor_nullWhenNoOverlapToMeasure() {
+        assertNull(StepMeasure.calibrationFactor(bias(0.0, 0.0, 0.0)))
+    }
 }

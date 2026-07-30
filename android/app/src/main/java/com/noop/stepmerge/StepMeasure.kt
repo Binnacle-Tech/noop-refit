@@ -29,6 +29,23 @@ object StepMeasure {
         val coCoveredHours: Double get() = coCoveredMs / 3_600_000.0
     }
 
+    /**
+     * The multiplier to apply to the LOWER source (Whoop) so it matches the HIGHER (phone) over the
+     * co-covered window — i.e. `phone / whoop = 1 / ratio`. Opt-in auto-calibration uses this to scale the
+     * strap's gap-fill toward phone truth without any manual "walk 1000 steps" tuning.
+     *
+     * Returns null (→ leave the strap raw) when there isn't enough overlap to trust ([minCoCoveredHours])
+     * or the ratio is outside a sane band — a freak window (phone glanced at for two minutes on a huge
+     * strap day) must never drive a wild over-correction. The band spans a matched strap (~1) up to the
+     * documented ~24–30× 5/MG overcount, with headroom.
+     */
+    fun calibrationFactor(bias: CrossSourceBias, minCoCoveredHours: Double = 6.0): Double? {
+        val ratio = bias.ratio ?: return null
+        if (bias.coCoveredHours < minCoCoveredHours) return null
+        if (ratio !in 0.5..40.0) return null
+        return 1.0 / ratio
+    }
+
     /** Bias of [lower] (Whoop) relative to [higher] (phone) over the intervals BOTH covered. */
     fun crossSourceBias(higher: List<StepInterval>, lower: List<StepInterval>): CrossSourceBias {
         val inter = intersect(coverage(higher), coverage(lower))

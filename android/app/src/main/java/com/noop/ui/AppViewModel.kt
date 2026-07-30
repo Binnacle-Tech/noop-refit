@@ -2012,6 +2012,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val hcWriteActiveKcal: StateFlow<Boolean> = _hcWriteActiveKcal.asStateFlow()
     private val _hcWriteSteps = MutableStateFlow(NoopPrefs.hcWriteSteps(appContext))
     val hcWriteSteps: StateFlow<Boolean> = _hcWriteSteps.asStateFlow()
+    private val _hcStepAutoCalibrate = MutableStateFlow(NoopPrefs.hcStepAutoCalibrate(appContext))
+    val hcStepAutoCalibrate: StateFlow<Boolean> = _hcStepAutoCalibrate.asStateFlow()
 
     // Last writeback outcome (#660). Read from prefs (the writer persists it — including on the
     // background BLE path, which never touches this VM), so Data Sources shows a failing share
@@ -2079,6 +2081,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun setHcWriteSteps(enabled: Boolean) {
         _hcWriteSteps.value = enabled
         NoopPrefs.setHcWriteSteps(appContext, enabled)
+    }
+
+    /** Flip opt-in strap↔phone auto-calibration for the arbiter. The next publish reads the pref. */
+    fun setHcStepAutoCalibrate(enabled: Boolean) {
+        _hcStepAutoCalibrate.value = enabled
+        NoopPrefs.setHcStepAutoCalibrate(appContext, enabled)
     }
 
     /** One immediate writeback (permissions assumed granted — the UI gates on that). */

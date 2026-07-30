@@ -447,6 +447,19 @@ object NoopPrefs {
         of(context).edit().putBoolean(KEY_HC_WRITE_STEPS, enabled).apply()
     }
 
+    /** Opt-in: let the step arbiter auto-calibrate the strap against the phone (com.noop.stepmerge).
+     *  When on, once the recent window holds enough phone↔strap overlap, the strap's published steps are
+     *  scaled by the measured phone/strap ratio — no manual "walk 1000 steps" tuning. Arbiter-only: does
+     *  NOT change the app's own displayed step total. Default OFF. */
+    const val KEY_HC_STEP_AUTOCAL = "noop.hcStepAutoCalibrate"
+
+    fun hcStepAutoCalibrate(context: Context): Boolean =
+        of(context).getBoolean(KEY_HC_STEP_AUTOCAL, false)
+
+    fun setHcStepAutoCalibrate(context: Context, enabled: Boolean) {
+        of(context).edit().putBoolean(KEY_HC_STEP_AUTOCAL, enabled).apply()
+    }
+
     /** Last writeback OUTCOME (#660) — surfaced in Data Sources so a silently-failing share (revoked
      *  permission, provider error) is visible instead of a healthy-looking toggle. [KEY_HC_WB_STATUS]
      *  holds a PII-safe category ([HC_WB_OK] / [HC_WB_PERMISSION_DENIED] / [HC_WB_REMOTE_ERROR]); "" = never. */
