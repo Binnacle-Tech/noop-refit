@@ -101,7 +101,7 @@ object StepPublisher {
         val whoopTier = if (factor != null) whoop.map { it.copy(count = it.count * factor) } else whoop
         if (NoopPrefs.hcStepAutoCalibrate(context)) {
             android.util.Log.i(TAG, factor?.let { "auto-cal: applied x%.3f (accrued %.1fh over %d day(s))".format(it, accruedHours, accrued.size) }
-                ?: "auto-cal: waiting (need >=3h accrued co-covered, have %.1fh)".format(accruedHours))
+                ?: "auto-cal: waiting (need >=1h accrued co-covered, have %.1fh)".format(accruedHours))
         }
         val tiers = hcTiers + listOf(whoopTier)
         if (tiers.all { it.isEmpty() }) { android.util.Log.i(TAG, "skip: no step data in window"); return 0 }

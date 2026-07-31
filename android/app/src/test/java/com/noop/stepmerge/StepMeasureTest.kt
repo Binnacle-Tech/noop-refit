@@ -81,8 +81,8 @@ class StepMeasureTest {
     }
 
     @Test fun factor_nullBelowMinCoCoveredHours() {
-        // Same 2.5x bias but only 1h overlap → too thin, leave the strap raw.
-        assertNull(StepMeasure.calibrationFactor(bias(1.0, 1000.0, 2500.0)))
+        // Same 2.5x bias but only 0.5h overlap → too thin, leave the strap raw.
+        assertNull(StepMeasure.calibrationFactor(bias(0.5, 1000.0, 2500.0)))
     }
 
     @Test fun factor_nullWhenRatioOutOfSaneBand() {
@@ -128,8 +128,8 @@ class StepMeasureTest {
             day("2026-07-03", 2.0, 300.0, 750.0),
         )
         assertEquals(0.4, StepMeasure.accruedFactor(stats)!!, 1e-9)
-        // Same ratio but only 2h total accrued → still below the 3h gate.
-        assertNull(StepMeasure.accruedFactor(listOf(day("2026-07-01", 2.0, 1000.0, 2500.0))))
+        // Same ratio but only 0.5h total accrued → still below the 1h gate.
+        assertNull(StepMeasure.accruedFactor(listOf(day("2026-07-01", 0.5, 1000.0, 2500.0))))
     }
 
     @Test fun encodeDecode_roundTrips() {

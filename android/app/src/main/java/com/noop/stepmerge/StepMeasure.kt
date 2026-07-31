@@ -65,7 +65,7 @@ object StepMeasure {
     /** Calibration factor from the ACCRUED history: `phone / whoop` summed over all stored days, gated
      *  on total co-covered hours + a sane band (same guard as the single-window [calibrationFactor], but
      *  now the sample grows with time so it converges instead of sliding). Null = leave the strap raw. */
-    fun accruedFactor(stats: List<DayStat>, minCoCoveredHours: Double = 3.0): Double? {
+    fun accruedFactor(stats: List<DayStat>, minCoCoveredHours: Double = 1.0): Double? {
         val phone = stats.sumOf { it.phone }
         val whoop = stats.sumOf { it.whoop }
         val coHours = stats.sumOf { it.coMs } / 3_600_000.0
@@ -108,7 +108,7 @@ object StepMeasure {
      * strap day) must never drive a wild over-correction. The band spans a matched strap (~1) up to the
      * documented ~24–30× 5/MG overcount, with headroom.
      */
-    fun calibrationFactor(bias: CrossSourceBias, minCoCoveredHours: Double = 3.0): Double? {
+    fun calibrationFactor(bias: CrossSourceBias, minCoCoveredHours: Double = 1.0): Double? {
         val ratio = bias.ratio ?: return null
         if (bias.coCoveredHours < minCoCoveredHours) return null
         if (ratio !in 0.5..40.0) return null
