@@ -40229,6 +40229,110 @@
         }
       }
     },
+    "Clear scheduled exports": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geplante Exporte löschen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar exportaciones programadas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effacer les exports programmés"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar exportações agendadas"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除计划导出"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除排程匯出"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancella gli export pianificati"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Очистить запланированные экспорты"
+          }
+        }
+      }
+    },
+    "Clear scheduled exports?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geplante Exporte löschen?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Borrar exportaciones programadas?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effacer les exports programmés ?"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar exportações agendadas?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除计划导出？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除排程匯出？"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancellare gli export pianificati?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Очистить запланированные экспорты?"
+          }
+        }
+      }
+    },
     "Close": {
       "localizations": {
         "de": {
@@ -56480,6 +56584,59 @@
         }
       }
     },
+    "Every pattern buzzes the same on a WHOOP 5/MG — the repeat count isn't sent to that strap. Your choice is saved and applies to a WHOOP 4.0.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf einer WHOOP 5/MG vibriert jedes Muster gleich — die Wiederholungszahl wird an dieses Band nicht gesendet. Deine Auswahl wird gespeichert und gilt für eine WHOOP 4.0."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En una WHOOP 5/MG todos los patrones vibran igual: el número de repeticiones no se envía a esa correa. Tu elección se guarda y se aplica a una WHOOP 4.0."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur un WHOOP 5/MG, tous les motifs vibrent de la même façon — le nombre de répétitions n'est pas envoyé à ce bracelet. Votre choix est enregistré et s'applique à un WHOOP 4.0."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su un WHOOP 5/MG ogni schema vibra allo stesso modo — il numero di ripetizioni non viene inviato a quel cinturino. La tua scelta viene salvata e si applica a un WHOOP 4.0."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numa WHOOP 5/MG todos os padrões vibram igual — a contagem de repetições não é enviada para essa bracelete. A tua escolha fica guardada e aplica-se a uma WHOOP 4.0."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На WHOOP 5/MG все шаблоны вибрируют одинаково — число повторов не отправляется на этот ремешок. Ваш выбор сохраняется и применяется к WHOOP 4.0."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 WHOOP 5/MG 上所有模式的震动都相同——重复次数不会发送到该手环。你的选择会被保存，并在 WHOOP 4.0 上生效。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 WHOOP 5/MG 上所有模式的震動都相同——重複次數不會傳送到該手環。你的選擇會被儲存，並在 WHOOP 4.0 上生效。"
+          }
+        }
+      }
+    },
     "Every release, mirrored. A fallback if GitHub is ever down.": {
       "localizations": {
         "de": {
@@ -61238,6 +61395,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "從"
+          }
+        }
+      }
+    },
+    "From Apple Health": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Apple Health"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desde Apple Health"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Depuis Apple Health"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da Apple Health"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do Apple Health"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Из Apple Health"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来自 Apple 健康"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "來自 Apple 健康"
           }
         }
       }
@@ -74575,6 +74785,58 @@
           "stringUnit": {
             "state": "translated",
             "value": "請將它保持在 %@ 約一公尺範圍內。"
+          }
+        }
+      }
+    },
+    "Keep last exports": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letzte Exporte behalten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantener últimas exportaciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserver les derniers exports"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manter últimas exportações"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留最近的导出"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留最近的匯出"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantieni gli ultimi export"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Хранить последние экспорты"
           }
         }
       }
@@ -94178,6 +94440,58 @@
         }
       }
     },
+    "No scheduled exports to clear.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine geplanten Exporte zu löschen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay exportaciones programadas que borrar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun export programmé à effacer."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não há exportações agendadas para eliminar."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有需要清除的计划导出。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒有需要清除的排程匯出。"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun export pianificato da cancellare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет запланированных экспортов для очистки."
+          }
+        }
+      }
+    },
     "No scored days in this window. Widen the range or import more history.": {
       "localizations": {
         "de": {
@@ -98876,6 +99190,58 @@
           "stringUnit": {
             "state": "translated",
             "value": "Os cópia de seguranças mais antigos para além deste número são removidos, os mais antigos em primeiro lugar (≈ este número de dias). Se os dados estiverem corrompidos, restaure os mais recentes."
+          }
+        }
+      }
+    },
+    "Older scheduled exports beyond this many are pruned automatically, oldest first.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ältere geplante Exporte über diese Anzahl hinaus werden automatisch entfernt, älteste zuerst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las exportaciones programadas más antiguas que superen este número se eliminan automáticamente, empezando por las más antiguas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les exports programmés au-delà de ce nombre sont supprimés automatiquement, les plus anciens en premier."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As exportações agendadas mais antigas além deste número são eliminadas automaticamente, começando pelas mais antigas."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "超出该数量的旧计划导出会自动清理，最旧的优先。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "超出此數量的舊排程匯出會自動清除，最舊的優先。"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gli export pianificati più vecchi oltre questo numero vengono eliminati automaticamente, a partire dai più vecchi."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Более старые запланированные экспорты сверх этого числа удаляются автоматически, начиная с самых старых."
           }
         }
       }
@@ -114033,6 +114399,58 @@
         }
       }
     },
+    "Removed %lld file(s).": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Datei(en) entfernt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld archivo(s) eliminado(s)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld fichier(s) supprimé(s)."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ficheiro(s) removido(s)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已移除 %lld 个文件。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已移除 %lld 個檔案。"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld file rimossi."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалено файлов: %lld."
+          }
+        }
+      }
+    },
     "Removed all Apple Health imported data.": {
       "localizations": {
         "de": {
@@ -121709,6 +122127,58 @@
           "stringUnit": {
             "state": "translated",
             "value": "掃描中…"
+          }
+        }
+      }
+    },
+    "Scheduled exports cleared": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geplante Exporte gelöscht"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportaciones programadas eliminadas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exports programmés effacés"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportações agendadas eliminadas"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计划导出已清除"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "排程匯出已清除"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export pianificati cancellati"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запланированные экспорты очищены"
           }
         }
       }
@@ -139022,6 +139492,64 @@
         }
       }
     },
+    "These backups are unencrypted too. If this folder syncs to Drive, Dropbox or iCloud, the readable file goes there as well — only point it at a service you trust.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auch diese Sicherungen sind unverschlüsselt. Wenn dieser Ordner mit Drive, Dropbox oder iCloud synchronisiert wird, landet die lesbare Datei auch dort — zeigen Sie nur auf einen Dienst, dem Sie vertrauen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These backups are unencrypted too. If this folder syncs to Drive, Dropbox or iCloud, the readable file goes there as well — only point it at a service you trust."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas copias de seguridad tampoco están cifradas. Si esta carpeta se sincroniza con Drive, Dropbox o iCloud, el archivo legible también llegará allí: apunte solo a un servicio de confianza."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ces sauvegardes ne sont pas chiffrées non plus. Si ce dossier se synchronise avec Drive, Dropbox ou iCloud, le fichier lisible y sera aussi copié : ne pointez que vers un service de confiance."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anche questi backup non sono cifrati. Se questa cartella si sincronizza con Drive, Dropbox o iCloud, anche il file leggibile finisce lì — punta solo a un servizio di cui ti fidi."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas cópias de segurança também não estão encriptadas. Se esta pasta sincronizar com o Drive, o Dropbox ou o iCloud, o ficheiro legível também vai parar lá — aponta apenas para um serviço de confiança."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эти резервные копии тоже не зашифрованы. Если эта папка синхронизируется с Drive, Dropbox или iCloud, читаемый файл попадёт и туда — указывайте только надёжный сервис."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这些备份同样未加密。如果这个文件夹与 Drive、Dropbox 或 iCloud 同步，可读的文件也会一并上传——只指向你信任的服务。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這些備份同樣未加密。如果這個資料夾與 Drive、Dropbox 或 iCloud 同步，可讀的檔案也會一併上傳——只指向你信任的服務。"
+          }
+        }
+      }
+    },
     "These days are excluded from the estimate (your phone's real count is shown instead). They're here only so you can judge the estimate's accuracy.": {
       "localizations": {
         "de": {
@@ -139353,6 +139881,58 @@
         }
       }
     },
+    "This deletes every scheduled strap-log and raw-capture file NOOP has saved. This can't be undone.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dies löscht jede geplante Bandprotokoll- und Rohdaten-Erfassungsdatei, die NOOP gespeichert hat. Dies kann nicht rückgängig gemacht werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto elimina todos los archivos de registro de la correa y de captura en bruto programados que NOOP ha guardado. Esto no se puede deshacer."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ceci supprime tous les fichiers de journal du bracelet et de capture brute programmés que NOOP a enregistrés. Cette action est irréversible."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isto elimina todos os ficheiros de registo da pulseira e de captura em bruto agendados que a NOOP guardou. Esta ação não pode ser anulada."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这会删除 NOOP 保存的所有计划手环日志和原始捕获文件。此操作无法撤销。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這會刪除 NOOP 儲存的所有排程手環日誌與原始擷取檔案。此操作無法復原。"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo elimina ogni file di log del cinturino e di cattura grezza pianificato salvato da NOOP. Questa azione non può essere annullata."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это удалит все запланированные файлы журнала ремешка и необработанного захвата, сохранённые NOOP. Это действие нельзя отменить."
+          }
+        }
+      }
+    },
     "This install can't connect to Apple Health directly. It was sideloaded with a free signing profile, which doesn't include Apple's Health permission, so there's nothing to enable, and NOOP won't appear under Settings › Health.": {
       "extractionState": "stale",
       "localizations": {
@@ -139559,6 +140139,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "此安裝版本無法直接連接 Apple 健康。它簽署時使用的描述檔不包含 Apple 的健康權限，因此這裡沒有可授予的項目。"
+          }
+        }
+      }
+    },
+    "This is a plain, unencrypted archive — anyone who gets the file can open it with any zip tool. Store it somewhere you trust.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist ein einfaches, unverschlüsseltes Archiv — wer die Datei bekommt, kann sie mit jedem Zip-Programm öffnen. Bewahren Sie sie an einem Ort auf, dem Sie vertrauen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is a plain, unencrypted archive — anyone who gets the file can open it with any zip tool. Store it somewhere you trust."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es un archivo sencillo y sin cifrar: cualquiera que consiga el archivo puede abrirlo con cualquier herramienta zip. Guárdelo en un lugar de confianza."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "C'est une archive simple, non chiffrée : quiconque récupère le fichier peut l'ouvrir avec n'importe quel outil zip. Conservez-le dans un endroit de confiance."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo è un archivio semplice, non cifrato — chiunque ottenga il file può aprirlo con qualsiasi strumento zip. Conservalo in un posto di cui ti fidi."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "É um arquivo simples, não encriptado — quem tiver o ficheiro pode abri-lo com qualquer ferramenta zip. Guarda-o num sítio de confiança."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это обычный незашифрованный архив — любой, у кого есть файл, может открыть его любым zip-инструментом. Храните его в надёжном месте."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这是一个未加密的普通压缩包——任何拿到文件的人都能用任意压缩工具打开它。请把它存放在你信任的地方。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這是一個未加密的普通壓縮檔——任何拿到檔案的人都能用任意壓縮工具開啟它。請把它存放在你信任的地方。"
           }
         }
       }
@@ -159062,6 +159700,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "已放大，拖動以平移"
+          }
+        }
+      }
+    },
+    "\\(Int(importedML.rounded())) millilitres from Apple Health. Edit it in the app that logged it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\\(Int(importedML.rounded())) Milliliter aus Apple Health. Bearbeite den Eintrag in der App, die ihn erfasst hat."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\\(Int(importedML.rounded())) mililitros desde Apple Health. Edítalo en la app que lo registró."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\\(Int(importedML.rounded())) millilitres depuis Apple Health. Modifiez-le dans l’app qui l’a enregistré."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\\(Int(importedML.rounded())) millilitri da Apple Health. Modificalo nell’app che l’ha registrato."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\\(Int(importedML.rounded())) mililitros do Apple Health. Edite-o na app que o registou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\\(Int(importedML.rounded())) мл из Apple Health. Измените запись в приложении, которое её создало."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来自 Apple 健康的 \\(Int(importedML.rounded())) 毫升。请在记录它的 App 中修改。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "來自 Apple 健康的 \\(Int(importedML.rounded())) 毫升。請在記錄它的 App 中修改。"
           }
         }
       }
