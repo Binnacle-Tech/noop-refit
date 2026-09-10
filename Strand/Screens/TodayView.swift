@@ -3247,12 +3247,26 @@ struct TodayView: View {
             // edge, INSIDE the ring frame so it adds no stacked height, keeping the #762 self-sizing row
             // untouched). It opens the Charge breakdown sheet (the existing ChargeBreakdownSection), built
             // lazily on tap. No new badge/dot/tier sits under the ring (that would re-load the #762 stack).
+            // A ring opens the RICHEST explanation this shell has for its score, which is the rule
+            // Android states outright: "Charge keeps its breakdown sheet, which is richer than a trend and
+            // has no twin on the iOS liquid Today". That clause is why the three surfaces differ, and it
+            // is not an oversight. The Liquid Today sends Charge to the trend because it has no breakdown
+            // to offer; THIS shell has one, so its Charge ring keeps it and matches Android.
+            //
+            // Effort and Rest have no breakdown on any platform, so the trend is the richest thing they
+            // have and both rings open it, exactly as Android's do. The keys are the ones
+            // `HeroRingDetailRouteTests` pins against `MetricCatalog`; `TabRoute.metric` falls back to the
+            // Health screen on an unknown key rather than failing, which is why they are pinned.
             heroRingColumn(section: .charge, domain: .charge, provenanceKey: "recovery",
-                           onRingTap: { showChargeBreakdown = true }) {
+                           onOpenBreakdown: { showChargeBreakdown = true }) {
                 chargeRing(score: score, d: d, diameter: ring)
             }
-            heroRingColumn(section: .effort, domain: .effort) { effortRing(d: d, diameter: ring) }
+            heroRingColumn(section: .effort, domain: .effort,
+                           detailRoute: .metric(HeroRingMetric.effort)) { effortRing(d: d, diameter: ring) }
+            // `provenanceKey` spells the same string the route does and stays a literal on purpose: it
+            // asks which SOURCE won this day, not which catalog entry to open. See `HeroRingMetric`.
             heroRingColumn(section: .rest, domain: .rest, provenanceKey: "sleep_performance",
+                           detailRoute: .metric(HeroRingMetric.rest),
                            caption: restIsPendingSync ? "Pending sync" : nil,
                            captionWidth: ring) { restRing(diameter: ring) }
         }
@@ -3284,6 +3298,16 @@ struct TodayView: View {
 
     /// The VoiceOver label for a hero ring's "how this score is calculated" button, with the domain word
     /// interpolated from a localized literal (so the spoken sentence is translated, not half-English).
+    private static func domainDetailAccessibilityLabel(_ domain: DomainTheme) -> LocalizedStringKey {
+        switch domain {
+        case .charge: return "Open your Charge detail"
+        case .effort: return "Open your Effort detail"
+        case .rest:   return "Open your Rest detail"
+        case .stress: return "Open your Stress detail"
+        }
+    }
+
+    /// The VoiceOver label for a hero ring's "how this score is calculated" chevron.
     private static func domainGuideAccessibilityLabel(_ domain: DomainTheme) -> LocalizedStringKey {
         switch domain {
         case .charge: return "How Charge is calculated"
@@ -3307,17 +3331,34 @@ struct TodayView: View {
     /// ring's edge. Mirrors Android's `HeroRingColumn(caption:)`.
     private func heroRingColumn<RingBody: View>(
         section: ScoreSection, domain: DomainTheme, provenanceKey: String? = nil,
-        onRingTap: (() -> Void)? = nil, caption: String? = nil,
+        onOpenBreakdown: (() -> Void)? = nil, detailRoute: TabRoute? = nil, caption: String? = nil,
         captionWidth: CGFloat = 98,
         @ViewBuilder ring: () -> RingBody
     ) -> some View {
         VStack(spacing: 8) {
-            // A1: when the column is tappable (Charge), wrap the ring in a button (the body is just the ring
-            // with a contentShape so the whole disc is hittable). The tappable ring carries NO in-ring cue:
-            // the single affordance is the label chevron below it (see the comment near the Button below).
-            // The non-tappable rings render unchanged.
-            if let onRingTap {
-                Button(action: onRingTap) {
+            // The RING opens this score's own detail, which is what the Liquid Today has done since
+            // #1995 and what Android does through its own hero keys. Here it used to be Charge alone,
+            // wired to the breakdown sheet, while Effort and Rest were not tappable at all: two of the
+            // three rings did nothing and the third went somewhere else. The chevron below keeps whatever
+            // it already opened, so this adds a destination rather than moving one.
+            //
+            // A1: the body is the ring plus a contentShape so the whole disc is hittable, and the ring
+            // carries NO in-ring cue. `.plain` is load-bearing: a bare NavigationLink applies the default
+            // link chrome and would tint the ring, the same reason `metricRow` carries a button style.
+            // A column supplies EITHER a route (Effort, Rest) or a breakdown (Charge, whose richer
+            // explanation is a sheet rather than a destination), never both. `onOpenBreakdown` drives the
+            // ring AND the chevron, because for that score both lead to the same sheet and two arguments
+            // holding one closure would be two things to keep in step. A column with neither renders a
+            // plain ring, which is what a future domain with nothing richer to open should get.
+            if let detailRoute {
+                NavigationLink(value: detailRoute) {
+                    ring().contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Self.domainDetailAccessibilityLabel(domain))
+                .accessibilityAddTraits(.isButton)
+            } else if let onOpenBreakdown {
+                Button(action: onOpenBreakdown) {
                     ring().contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -3330,7 +3371,7 @@ struct TodayView: View {
             // ONE chevron affordance under every ring, so the row reads uniformly (no second cue on the
             // Charge ring). Charge's chevron opens the "what shaped it" breakdown (its richest explanation);
             // Effort / Rest open their scoring-guide section.
-            Button { if let onRingTap { onRingTap() } else { guideSection = section } } label: {
+            Button { if let onOpenBreakdown { onOpenBreakdown() } else { guideSection = section } } label: {
                 HStack(spacing: 3) {
                     // #937: an invisible LEADING twin of the trailing chevron. The word + chevron used to
                     // centre as ONE block, which pushed the word visibly off the ring's axis (worst on short
@@ -3358,8 +3399,8 @@ struct TodayView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(onRingTap == nil ? Self.domainGuideAccessibilityLabel(domain)
-                                                  : "See what shaped your Charge")
+            .accessibilityLabel(onOpenBreakdown == nil ? Self.domainGuideAccessibilityLabel(domain)
+                                                        : "See what shaped your Charge")
             // Component 4, the real per-day source under the ring (only when this score has a value for
             // the day AND we resolved its winner; a calibrating / empty ring shows no provenance badge).
             // Apple Watch (M1): a watch-sourced score reads "Apple Watch" with its confidence bound to the
