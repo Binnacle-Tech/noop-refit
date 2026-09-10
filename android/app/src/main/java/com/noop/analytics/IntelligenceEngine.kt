@@ -1621,11 +1621,13 @@ object IntelligenceEngine {
             val dayEditedRows = editedRowsForDay(editedRows, res.daily.day, tzOffsetSeconds)
             // Substitute an edited block's (reshaped) stages for its detected twin before the daily
             // sleep aggregate feeds Rest + recovery. No edit touching this night → `daily` is unchanged.
-            val daily = editedCycleDaily(
+            val editedDaily = editedCycleDaily(
                 res, dayEditedRows, tzOffsetSeconds, habitualMidsleepSec,
                 physiologicalSteps, computedId, restRows,
             )
-            val recovery = recomputeRecovery(daily, baselines2)
+            val daily = recomputeRecoveryDaily(editedDaily, res.nightlySkinTempC, baselines2)
+            val recovery = daily.recovery
+            val skinTempDevC = daily.skinTempDevC
             // Charge term-breakdown trace (Test Centre Group G): only when the Recovery test mode is on
             // (recoveryTraceSink non-null). Emits which term moved Charge and which was nil and forced the
             // renorm, tagged .recovery. The trace's score is RecoveryScorer.recovery verbatim, so the
@@ -1634,7 +1636,6 @@ object IntelligenceEngine {
             if (recoveryTraceSink != null) {
                 for (line in recoveryTraceLines(daily, baselines2)) recoveryTraceSink(line)
             }
-            val skinTempDevC = recomputeSkinTempDev(res.nightlySkinTempC, baselines2.skinTemp)
             RestScorer.restFromDaily(daily)?.let { rest ->
                 restRows.add(MetricSeriesRow(deviceId = computedId, day = daily.day, key = "sleep_performance", value = rest))
             }
@@ -2334,6 +2335,20 @@ object IntelligenceEngine {
             sleepPerf = restQuality,
             skinTempDev = daily.skinTempDevC,
         )
+    }
+
+    /**
+     * Pass 1 has no seeded skin baseline. Attach the deviation before scoring so the score,
+     * trace and persisted row all consume the same temperature. Mirrors Swift recomputeRecoveryDaily.
+     */
+    internal fun recomputeRecoveryDaily(
+        daily: DailyMetric, nightlySkinTempC: Double?, baselines: ProfileBaselines,
+    ): DailyMetric {
+        val input = daily.copy(
+            skinTempDevC = recomputeSkinTempDev(nightlySkinTempC, baselines.skinTemp),
+            skinTempC = nightlySkinTempC,
+        )
+        return input.copy(recovery = recomputeRecovery(input, baselines))
     }
 
     /** One day's source-only (daily-aggregate) recovery output, keyed by day. Mirrors Swift WatchScoredDay. */
