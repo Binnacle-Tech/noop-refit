@@ -5997,6 +5997,16 @@ private fun HrWindowPills(selection: HrWindow, onSelect: (HrWindow) -> Unit) {
     )
 }
 
+/** The width of the Today HR card's buckets.
+ *
+ *  ONE literal, read by the load below and by the gap test in [OverviewHRChart]. They have to agree:
+ *  [hrGapSegmentIds] calls any step wider than one bucket a gap, so a load widened to 600 against a
+ *  test still holding 300 would call EVERY step a gap and shatter the line into dots. The codebase
+ *  genuinely runs 60, 300, 3600 and a span-derived width for other charts, so the two drifting apart is
+ *  a live possibility rather than a theoretical one.
+ */
+internal const val HR_CARD_BUCKET_SECONDS = 300L
+
 @Composable
 private fun HeartRateTrendCard(
     viewModel: AppViewModel,
@@ -6063,7 +6073,9 @@ private fun HeartRateTrendCard(
         // #908: the Today HR curve reads the active strap ∪ canonical "my-whoop" union, NOT a hardcoded
         // "my-whoop". A strap re-added via the device manager banks live HR under its own fresh id, so a
         // pinned read showed the "no heart rate banked yet today" empty state. Single-WHOOP ⇒ one id ⇒ same.
-        buckets = viewModel.repo.hrBucketsUnion(viewModel.activeStrapId, start, end, 300L)
+        buckets = viewModel.repo.hrBucketsUnion(
+            viewModel.activeStrapId, start, end, HR_CARD_BUCKET_SECONDS,
+        )
         // The sleep that ended within the chart window (the night before / this morning), anchors
         // the band + the Charge-at-wake marker. A wide lower bound catches an onset before midnight.
         // Resolves the day's bridged MAIN-night span via `mainSleepSpan` (the SAME resolver the Sleep
@@ -6482,6 +6494,9 @@ private fun OverviewHRChart(
 ) {
     // The line itself stays the existing shared component, unchanged, markers are a sibling overlay.
     val bucketTimestamps = remember(buckets) { buckets.map { it.bucket } }
+    val gapSegments = remember(bucketTimestamps) {
+        hrGapSegmentIds(bucketTimestamps, HR_CARD_BUCKET_SECONDS)
+    }
     val minV = bpm.min()
     val maxV = bpm.max()
     val span = (maxV - minV).takeIf { it > 0.0 } ?: 1.0
@@ -6609,6 +6624,9 @@ private fun OverviewHRChart(
             // formatter carries the unit — "14:32 · 87 bpm" instead of a bare "87".
             formatValue = { "${it.roundToInt()} bpm" },
             timestamps = bucketTimestamps,
+            // A bucket with no samples is absent from the aggregate, so without this the stroke joins
+            // the two neighbours and draws a steady climb across hours the strap recorded nothing.
+            segmentIds = gapSegments,
         )
 
         // 2) Wake divider + dashed rules + glow end-cap, drawn in one Canvas ON TOP of the line.
