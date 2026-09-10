@@ -443,7 +443,7 @@ extension WhoopStore {
             // This subquery uses the SAME time/suspect predicates as the outer read, before LIMIT.
             let sourcePredicate = strictWhoop5 ? """
                 srcChannel = (SELECT MIN(srcChannel) FROM rrInterval
-                    WHERE deviceId = :d AND ts >= :f AND ts <= :t AND srcChannel IN (5, 7)
+                    WHERE deviceId = :d AND ts >= :f AND ts <= :t AND srcChannel IN \(Self.scorableWhoop5Channels)
                     AND (tsSuspect IS NULL OR tsSuspect <> 1))
                 """ : "1"
             return try Row.fetchAll(db, sql: """

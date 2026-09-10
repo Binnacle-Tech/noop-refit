@@ -15,6 +15,54 @@ final class Whoop5RRStoreTests: XCTestCase {
         try await store.rrIntervals(deviceId: id, from: from, to: to, limit: limit)
     }
 
+    /// The date the "this night cannot be scored" explanation names comes from this read, so it has to
+    /// agree with what scoring actually accepts: labelled scoring transports only, suspect stamps
+    /// excluded, and nil rather than a fabricated epoch when nothing scorable has been banked yet.
+    /// Same assertions as the Kotlin `firstScorableTimestampMatchesWhatScoringAccepts`.
+    func testFirstScorableTimestampMatchesWhatScoringAccepts() async throws {
+        let store = try await WhoopStore.inMemory()
+        try registry(store, model: "5.0 MG")
+        // Legacy unlabelled beats only: nothing here can be scored, so there is no first scorable day.
+        _ = try await store.insert(Streams(rr: (100..<110).map { RRInterval(ts: $0, rrMs: 1000) }), deviceId: id)
+        var first = try await store.firstScorableWhoop5RRTimestamp(deviceId: id)
+        XCTAssertNil(first)
+        // The lower bound sees those same rows: they WERE recorded, they just cannot be read.
+        var recorded = try await store.firstRecordedRRTimestamp(deviceId: id)
+        XCTAssertEqual(recorded, 100)
+        // A type-40 live beat (6) is labelled but is NOT a scoring transport, so it must not count.
+        _ = try await store.insert(Streams(rr: [RRInterval(ts: 200, rrMs: 1000, srcChannel: .whoop5Realtime)]),
+                                   deviceId: id)
+        first = try await store.firstScorableWhoop5RRTimestamp(deviceId: id)
+        XCTAssertNil(first)
+        // A future-stamped beat is excluded from scoring (#1073), so it cannot name the day either.
+        let device = id
+        try await store.dbWriter.write { db in
+            try db.execute(sql: """
+                INSERT OR REPLACE INTO rrInterval(deviceId, ts, rrMs, seq, synced, ord, srcChannel, tsSuspect)
+                VALUES (?, 300, 1000, 0, 0, 0, 7, 1)
+                """, arguments: [device])
+        }
+        first = try await store.firstScorableWhoop5RRTimestamp(deviceId: id)
+        XCTAssertNil(first)
+        // The first genuinely scorable beat, and then an earlier one, which must win.
+        _ = try await store.insert(Streams(rr: [RRInterval(ts: 900, rrMs: 1000, srcChannel: .whoop5Standard)]),
+                                   deviceId: id)
+        first = try await store.firstScorableWhoop5RRTimestamp(deviceId: id)
+        XCTAssertEqual(first, 900)
+        _ = try await store.insert(Streams(rr: [RRInterval(ts: 400, rrMs: 1000, srcChannel: .whoop5Historical)]),
+                                   deviceId: id)
+        first = try await store.firstScorableWhoop5RRTimestamp(deviceId: id)
+        XCTAssertEqual(first, 400)
+        // The lower bound ignores the channel entirely and still refuses the suspect stamp.
+        recorded = try await store.firstRecordedRRTimestamp(deviceId: id)
+        XCTAssertEqual(recorded, 100)
+        // Another device's beats never leak into either answer.
+        let other = try await store.firstScorableWhoop5RRTimestamp(deviceId: "someone-else")
+        XCTAssertNil(other)
+        let otherRecorded = try await store.firstRecordedRRTimestamp(deviceId: "someone-else")
+        XCTAssertNil(otherRecorded)
+    }
+
     func testHistoricalCanonicalOwnerAfterRePairingUsesActiveWhoop5Policy() async throws {
         let store = try await WhoopStore.inMemory()
         try registry(store, model: "WHOOP")

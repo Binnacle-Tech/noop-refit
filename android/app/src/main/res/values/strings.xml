@@ -2778,4 +2778,6 @@
     <string name="l10n_today_screen_see_the_charge_trend_9dcbcff7">See the Charge trend</string>
     <string name="l10n_today_screen_every_day_s_score_over_time_a00ea7c7">Every day\'s score, over time.</string>
     <string name="l10n_app_changelog_a_coach_that_keeps_the_thread_2ee52e0c">A coach that keeps the thread, your heart rate on the home screen, and charts that claim less</string>
+    <string name="charge_legacy_rr_gap_title">Earlier beats cannot be scored</string>
+    <string name="charge_legacy_rr_gap_detail">This night was recorded before NOOP labelled which WHOOP 5 transport each heartbeat came from, so its intervals mix two different units with nothing stored to tell them apart. The night stays in your history, and nights recorded from now on score normally.</string>
 </resources>

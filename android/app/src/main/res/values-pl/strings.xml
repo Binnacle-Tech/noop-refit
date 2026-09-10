@@ -2753,4 +2753,6 @@
     <string name="l10n_today_screen_see_the_charge_trend_9dcbcff7">Zobacz trend Energii</string>
     <string name="l10n_today_screen_every_day_s_score_over_time_a00ea7c7">Wynik każdego dnia w czasie.</string>
     <string name="l10n_app_changelog_a_coach_that_keeps_the_thread_2ee52e0c">Trener, który nie gubi wątku, tętno na ekranie głównym i wykresy, które mniej zakładają</string>
+    <string name="charge_legacy_rr_gap_title">Wcześniejszych uderzeń nie można ocenić</string>
+    <string name="charge_legacy_rr_gap_detail">Ta noc została zarejestrowana, zanim NOOP zaczął oznaczać, z którego kanału WHOOP 5 pochodzi każde uderzenie, więc jej odstępy mieszają dwie różne jednostki i nic zapisanego nie pozwala ich rozróżnić. Noc pozostaje w Twojej historii, a noce zarejestrowane od teraz są oceniane normalnie.</string>
 </resources>

@@ -90,13 +90,40 @@ internal const val RR_INTERVALS_SQL =
     "AND (tsSuspect IS NULL OR tsSuspect <> 1) " +
     "ORDER BY ts ASC, ord ASC, rrMs ASC, seq ASC LIMIT :limit"
 
+/** The transports a WHOOP 5 window may be SCORED through, as a SQL list.
+ *
+ *  One constant rather than a literal per query. [WHOOP5_RR_INTERVALS_SQL] pins a window to the lowest
+ *  of these present, and [FIRST_SCORABLE_WHOOP5_RR_SQL] reports when the first of them was banked, so
+ *  the day the app tells a wearer its scoring begins is derived from the same set the scoring uses. Two
+ *  literals would let those drift apart silently, and the drift would show as an explanation that names
+ *  the wrong date. Type-40 live (6) is deliberately absent: it is a labelling channel that standard BLE
+ *  (7) already covers beat for beat. Twin of Swift `WhoopStore.scorableWhoop5Channels`. */
+internal const val SCORABLE_WHOOP5_CHANNELS = "(5, 7)"
+
 internal const val WHOOP5_RR_INTERVALS_SQL =
     "SELECT * FROM rrInterval WHERE deviceId = :deviceId AND ts >= :from AND ts <= :to " +
     "AND (tsSuspect IS NULL OR tsSuspect <> 1) " +
     "AND srcChannel = (SELECT MIN(srcChannel) FROM rrInterval " +
-    "WHERE deviceId = :deviceId AND ts >= :from AND ts <= :to AND srcChannel IN (5, 7) " +
+    "WHERE deviceId = :deviceId AND ts >= :from AND ts <= :to AND srcChannel IN " +
+    SCORABLE_WHOOP5_CHANNELS + " " +
     "AND (tsSuspect IS NULL OR tsSuspect <> 1)) " +
     "ORDER BY ts ASC, ord ASC, rrMs ASC, seq ASC LIMIT :limit"
+
+/** The earliest beat a device has banked AT ALL, labelled or not, or null when it has none. The lower
+ *  bound on the "cannot be scored" explanation: it separates history this strap actually recorded from
+ *  history imported from somewhere else, and only the former can have lost anything to a labelling
+ *  change. Twin of Swift `firstRecordedRRTimestamp`. */
+internal const val FIRST_RECORDED_RR_SQL =
+    "SELECT MIN(ts) FROM rrInterval WHERE deviceId = :deviceId " +
+    "AND (tsSuspect IS NULL OR tsSuspect <> 1)"
+
+/** The earliest beat a device has banked that the unit policy can actually score, or null when it has
+ *  none at all. Cheap and device-level, not per-day: one indexed MIN over the beats already on disk.
+ *  Carries the same suspect-timestamp exclusion as the scoring read (#1073), so it cannot name a day
+ *  that scoring would then refuse. Twin of Swift `firstScorableWhoop5RRTimestamp`. */
+internal const val FIRST_SCORABLE_WHOOP5_RR_SQL =
+    "SELECT MIN(ts) FROM rrInterval WHERE deviceId = :deviceId AND srcChannel IN " +
+    SCORABLE_WHOOP5_CHANNELS + " AND (tsSuspect IS NULL OR tsSuspect <> 1)"
 
 internal const val HAS_WHOOP5_RR_SOURCE_SQL =
     "SELECT EXISTS(SELECT 1 FROM rrInterval WHERE deviceId = :deviceId AND srcChannel IN (5, 6, 7))"
@@ -560,6 +587,14 @@ interface WhoopDao : DeviceRegistryDao {
 
     @Query(HAS_WHOOP5_RR_SOURCE_SQL)
     suspend fun hasWhoop5RrSource(deviceId: String): Boolean
+
+    /** Nullable because MIN over no rows is SQL NULL: a device with nothing scorable yet. */
+    @Query(FIRST_SCORABLE_WHOOP5_RR_SQL)
+    suspend fun firstScorableWhoop5RrTs(deviceId: String): Long?
+
+    /** Nullable for the same reason: a device that has banked no beats at all. */
+    @Query(FIRST_RECORDED_RR_SQL)
+    suspend fun firstRecordedRrTs(deviceId: String): Long?
 
     /** Newly observed canonical source wins exact-key collisions: history > standard > native/legacy. */
     @Query(PROMOTE_WHOOP5_RR_SOURCE_SQL)

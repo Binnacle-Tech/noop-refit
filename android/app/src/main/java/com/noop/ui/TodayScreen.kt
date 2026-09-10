@@ -164,6 +164,7 @@ import com.noop.analytics.StepsEstimateEngine
 import com.noop.analytics.StrainScorer
 import com.noop.ble.WhoopModel
 import com.noop.data.DailyMetric
+import com.noop.protocol.Whoop5RR
 import com.noop.widget.StressPoint
 import com.noop.widget.StressWidgetProducer
 import com.noop.data.HrBucket
@@ -1085,6 +1086,51 @@ fun TodayScreen(
         }
     }
 
+    // #1505: whether this strap's R-R is read under the WHOOP 5 single-transport unit policy, plus the
+    // two local days that bound the era it could not score: the first day it banked ANY beat, and the
+    // first day it banked a scorable one (null when it has banked none). Three cheap reads (a registry
+    // row, two indexed MINs), keyed on `days` so a sync that lands labelled beats moves the scorable day
+    // instead of leaving a stale one telling a wearer last night could not be scored.
+    // A read that throws leaves the flag off, which HIDES the note rather than showing a guessed one.
+    var whoop5StrictRr by remember { mutableStateOf(false) }
+    var firstRecordedRrDay by remember { mutableStateOf<String?>(null) }
+    var firstScorableRrDay by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(days) {
+        runCatching {
+            // The ACTIVE strap, the id every other read on this screen threads. A re-pair leaves history
+            // under the canonical alias, and the repository's own policy resolves that; asking about the
+            // alias here would answer for whichever strap it inherited from.
+            val owner = viewModel.activeStrapId
+            // The plain local calendar date, which is the convention every banked `day` key on this
+            // screen uses (`selectedDay.toString()`), NOT the 04:00 logical-day remap: these compare
+            // against row keys, and remapping them would shift the boundary by a few hours.
+            fun dayKey(ts: Long?) =
+                ts?.let { LocalDate.ofInstant(Instant.ofEpochSecond(it), ZoneId.systemDefault()).toString() }
+            whoop5StrictRr = viewModel.repo.isWhoop5RrSource(owner)
+            firstRecordedRrDay = dayKey(viewModel.repo.firstRecordedRrTs(owner))
+            firstScorableRrDay = dayKey(viewModel.repo.firstScorableWhoop5RrTs(owner))
+        }.onFailure {
+            whoop5StrictRr = false
+            firstRecordedRrDay = null
+            firstScorableRrDay = null
+        }
+    }
+
+    // #1505: whether the SELECTED day's empty Charge is explained by the unit policy having no scorable
+    // beats for that night. The judgement is the pure `Whoop5RR.legacyUnscorableNight`, shared byte for
+    // byte with iOS; everything it reads is already on the row or loaded above.
+    val chargeLegacyRrGap = remember(displayMetric, whoop5StrictRr, firstRecordedRrDay, firstScorableRrDay) {
+        val row = displayMetric
+        row != null && row.recovery == null && Whoop5RR.legacyUnscorableNight(
+            strictWhoop5 = whoop5StrictRr,
+            day = row.day,
+            firstRecordedDay = firstRecordedRrDay,
+            firstScorableDay = firstScorableRrDay,
+            avgHrv = row.avgHrv,
+            totalSleepMin = row.totalSleepMin,
+        )
+    }
+
     // Explainability (COMPONENT 2): the honest state of the score side for TODAY, scored / calibrating /
     // carried-last-night / needs-strap. One state, never a bare blank, and never a fabricated number. Only
     // computed for today (offset 0); a past day shows its own row, not a "needs the strap" prompt.
@@ -1361,8 +1407,15 @@ fun TodayScreen(
             // the hero with NO in-ring caption, so its "Last night ..." note renders BELOW the rings here,
             // matching iOS explainedScoreNote. Today only; never a fabricated value.
             //
-            // #827: NeedsStrap ALWAYS shows (a today-blocking state, not a recurring nag).
-            if (selectedDayOffset == 0 && scoreState is ScoreState.NeedsStrap) {
+            // #1505: a night whose beats predate transport labelling has a known, specific cause, so it
+            // is named instead of leaving a bare blank. Checked BEFORE the generic states and on EVERY
+            // day, not just today: unlike an ordinary missing-data gap the cause is known, so a past day
+            // gets the same honest explanation, and that is where this is almost always read.
+            if (chargeLegacyRrGap) {
+                ChargeLegacyRrGapNote()
+            // #827: NeedsStrap ALWAYS shows (a today-blocking state, not a recurring nag), except behind
+            // the #1505 note above, which names the SAME blank's actual cause rather than restating it.
+            } else if (selectedDayOffset == 0 && scoreState is ScoreState.NeedsStrap) {
                 ScoreStateNote(scoreState)
             }
             // The carried "Latest sleep · <date>" / "Last night · <date>" note. iOS has NOTHING in this slot,
@@ -5239,6 +5292,40 @@ private fun ScoreStateNote(state: ScoreState, restartCause: String? = null) {
                 restartCause?.let {
                     Text(it, style = NoopType.footnote, color = Palette.textTertiary)
                 }
+            }
+        }
+    }
+}
+
+/** #1505: the note shown instead of a bare blank when the selected night's beats predate WHOOP 5
+ *  transport labelling and so cannot be scored. Same card shape as [ScoreStateNote] it sits beside.
+ *  Twin of the iOS `chargeLegacyRRGapNote`. */
+@Composable
+private fun ChargeLegacyRrGapNote() {
+    val title = uiString(R.string.charge_legacy_rr_gap_title)
+    val detail = uiString(R.string.charge_legacy_rr_gap_detail)
+    // Resolved before the Row: `semantics { }` is not a composable scope, so uiString cannot be called
+    // inside it, and reading them once keeps the card and its a11y label on one string.
+    val noteA11y = uiString(R.string.l10n_today_screen_state_title_state_detail_f5380609, title, detail)
+    NoopCard {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = noteA11y },
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            Icon(
+                Icons.Filled.MonitorHeart,
+                contentDescription = null,
+                tint = Palette.chargeColor,
+                modifier = Modifier
+                    .padding(top = 1.dp)
+                    .size(Metrics.iconSmall),
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, style = NoopType.headline, color = Palette.textPrimary)
+                Text(detail, style = NoopType.subhead, color = Palette.textSecondary)
             }
         }
     }

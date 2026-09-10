@@ -2748,4 +2748,6 @@
     <string name="l10n_today_screen_see_the_charge_trend_9dcbcff7">Voir la tendance de la charge</string>
     <string name="l10n_today_screen_every_day_s_score_over_time_a00ea7c7">Le score de chaque jour, dans la durée.</string>
     <string name="l10n_app_changelog_a_coach_that_keeps_the_thread_2ee52e0c">Un coach qui garde le fil, votre fréquence cardiaque sur l\'écran d\'accueil, et des graphiques qui affirment moins</string>
+    <string name="charge_legacy_rr_gap_title">Battements antérieurs non évaluables</string>
+    <string name="charge_legacy_rr_gap_detail">Cette nuit a été enregistrée avant que NOOP n\'indique de quel transport WHOOP 5 provenait chaque battement. Ses intervalles mêlent donc deux unités différentes, sans rien d\'enregistré pour les distinguer. La nuit reste dans votre historique, et les nuits enregistrées à partir de maintenant sont évaluées normalement.</string>
 </resources>

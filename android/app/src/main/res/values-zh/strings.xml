@@ -2662,4 +2662,6 @@
     <string name="l10n_today_screen_see_the_charge_trend_9dcbcff7">查看充能趋势</string>
     <string name="l10n_today_screen_every_day_s_score_over_time_a00ea7c7">每天的分数，随时间变化。</string>
     <string name="l10n_app_changelog_a_coach_that_keeps_the_thread_2ee52e0c">能接住话头的教练、主屏幕上的心率，以及不再过度断言的图表</string>
+    <string name="charge_legacy_rr_gap_title">早期心跳无法评分</string>
+    <string name="charge_legacy_rr_gap_detail">这一夜是在 NOOP 标记每次心跳来自哪条 WHOOP 5 传输通道之前记录的，因此其间隔混合了两种不同的单位，而且没有保存任何可以区分它们的信息。该夜仍保留在你的历史记录中，从现在起记录的夜晚会正常评分。</string>
 </resources>

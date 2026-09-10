@@ -1308,6 +1308,18 @@ class WhoopRepository(
         return com.noop.protocol.Whoop5RR.usesCanonicalSource(owner?.model, owner?.brand, tagged || unlabelledAliasOfWhoop5)
     }
 
+    /** The earliest beat this device has banked that the unit policy can actually score, or null when
+     *  it has none. See [FIRST_SCORABLE_WHOOP5_RR_SQL]; the caller turns it into a local day key, since
+     *  the calendar is the app's policy and not the store's. Twin of Swift
+     *  `firstScorableWhoop5RRTimestamp`. */
+    suspend fun firstScorableWhoop5RrTs(deviceId: String): Long? =
+        dao.firstScorableWhoop5RrTs(deviceId)
+
+    /** The earliest beat this device has banked at all, or null when it has none. See
+     *  [FIRST_RECORDED_RR_SQL]. Twin of Swift `firstRecordedRRTimestamp`. */
+    suspend fun firstRecordedRrTs(deviceId: String): Long? =
+        dao.firstRecordedRrTs(deviceId)
+
     /** Diagnostic export keeps all WHOOP transports and legacy values without scoring selection.
      * Existing quarantine and Oura SpO2-IBI exclusions still apply. */
     suspend fun rawRrIntervalsForDevice(deviceId: String, from: Long, to: Long,

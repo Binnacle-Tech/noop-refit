@@ -87,4 +87,58 @@ class Whoop5RRTest {
     @Test fun transportCodes() {
         assertEquals((1..7).toList(), RrSourceChannel.entries.map { it.code })
     }
+
+    /**
+     * The parity contract for the "this night cannot be scored" explanation. The Swift
+     * `testLegacyUnscorableNight` carries the SAME rows, so the two platforms cannot start explaining a
+     * different set of nights to the wearer.
+     */
+    @Test fun legacyUnscorableNight() {
+        // (name, strictWhoop5, day, firstRecordedDay, firstScorableDay, avgHrv, totalSleepMin, claimed)
+        val cases = listOf(
+            // A confirmed WHOOP 5 recording since the 1st, labelled era starting on the 10th: the 9th is
+            // the case this explains.
+            Case("W5, staged night inside the unlabelled era", true, "2026-08-09", "2026-08-01", "2026-08-10", null, 431.0, true),
+            // The same night once it scored: there is nothing to explain.
+            Case("W5, that night scored", true, "2026-08-09", "2026-08-01", "2026-08-10", 48.0, 431.0, false),
+            // Nothing staged, so an empty HRV is far more likely an unworn strap. Never blame the units.
+            Case("W5, no night staged", true, "2026-08-09", "2026-08-01", "2026-08-10", null, 0.0, false),
+            Case("W5, sleep unknown", true, "2026-08-09", "2026-08-01", "2026-08-10", null, null, false),
+            // On and after the first scorable day the general statement stops being true.
+            Case("W5, the labelled day itself", true, "2026-08-10", "2026-08-01", "2026-08-10", null, 431.0, false),
+            Case("W5, inside the labelled era", true, "2026-08-11", "2026-08-01", "2026-08-10", null, 431.0, false),
+            // BEFORE the strap ever recorded: imported history, which never had beats to lose.
+            Case("W5, imported night predating the strap", true, "2026-07-30", "2026-08-01", "2026-08-10", null, 431.0, false),
+            Case("W5, the first recorded day itself", true, "2026-08-01", "2026-08-01", "2026-08-10", null, 431.0, true),
+            // A device that has banked no beats at all can never have lost any to the units.
+            Case("W5, nothing recorded", true, "2026-08-09", null, null, null, 431.0, false),
+            Case("W5, nothing recorded, empty key", true, "2026-08-09", "", null, null, 431.0, false),
+            // Recording, but never synced since the units were corrected: every staged night in the era.
+            Case("W5, nothing labelled banked", true, "2026-08-09", "2026-08-01", null, null, 431.0, true),
+            Case("W5, nothing labelled, empty key", true, "2026-08-09", "2026-08-01", "", null, 431.0, true),
+            // The policy is not applied to this device, so the explanation would be a lie.
+            Case("WHOOP 4 night", false, "2026-08-09", "2026-08-01", "2026-08-10", null, 431.0, false),
+            // Day keys are yyyy-MM-dd, so string order is date order across a month and a year boundary.
+            Case("W5, previous month", true, "2026-07-31", "2026-07-01", "2026-08-01", null, 400.0, true),
+            Case("W5, next year", true, "2027-01-01", "2026-01-01", "2026-12-31", null, 400.0, false),
+        )
+        for (c in cases) {
+            assertEquals(
+                c.name,
+                c.want,
+                Whoop5RR.legacyUnscorableNight(c.strict, c.day, c.recorded, c.scorable, c.hrv, c.sleep),
+            )
+        }
+    }
+
+    private data class Case(
+        val name: String,
+        val strict: Boolean,
+        val day: String,
+        val recorded: String?,
+        val scorable: String?,
+        val hrv: Double?,
+        val sleep: Double?,
+        val want: Boolean,
+    )
 }

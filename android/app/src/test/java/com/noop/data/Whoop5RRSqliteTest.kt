@@ -114,6 +114,11 @@ class Whoop5RRSqliteTest {
                 "hasWhoop5RrSource" -> query(HAS_WHOOP5_RR_SOURCE_SQL, mapOf("deviceId" to args[0])) {
                     it.getBoolean(1)
                 }.single()
+                "firstScorableWhoop5RrTs", "firstRecordedRrTs" -> query(
+                    if (method.name == "firstRecordedRrTs") FIRST_RECORDED_RR_SQL
+                    else FIRST_SCORABLE_WHOOP5_RR_SQL,
+                    mapOf("deviceId" to args[0]),
+                ) { row -> row.getLong(1).let { if (row.wasNull()) null else it } }.single()
                 "analysisFingerprint" -> query(ANALYSIS_FINGERPRINT_SQL) { it.getString(1) }.single()
                 "dayStreamFingerprint" -> query(DAY_STREAM_FINGERPRINT_SQL,
                     listOf("deviceId", "from", "to").zip(args.take(3)).toMap()) { it.getString(1) }.single()
@@ -171,6 +176,42 @@ class Whoop5RRSqliteTest {
     }
     private suspend fun read(from: Long = 0, to: Long = 1000, limit: Int = 100) =
         repo.rrIntervalsForDevice(id, from, to, limit)
+
+    /** The date the "this night cannot be scored" explanation names comes from this query, so it has to
+     *  agree with what scoring actually accepts: labelled transports only, suspect stamps excluded, and
+     *  null rather than a fabricated epoch when the device has banked nothing scorable yet. */
+    @Test fun firstScorableTimestampMatchesWhatScoringAccepts() = runBlocking {
+        registry("5.0 MG")
+        // Legacy unlabelled beats only: nothing here can be scored, so there is no first scorable day.
+        repo.insert(StreamBatch(rr = (100L until 110L).map { RrRow(it, 1000) }), id)
+        assertNull(repo.firstScorableWhoop5RrTs(id))
+        // The lower bound sees those same rows: they WERE recorded, they just cannot be read.
+        assertEquals(100L, repo.firstRecordedRrTs(id))
+        // A type-40 live beat (6) is labelled but is NOT a scoring transport, so it must not count.
+        insertRr(ts = 200L, channel = 6)
+        assertNull(repo.firstScorableWhoop5RrTs(id))
+        // A future-stamped beat is excluded from scoring (#1073), so it cannot name the day either.
+        insertRr(ts = 300L, channel = 7, suspect = 1)
+        assertNull(repo.firstScorableWhoop5RrTs(id))
+        // The first genuinely scorable beat, and then an earlier one, which must win.
+        insertRr(ts = 900L, channel = 7)
+        assertEquals(900L, repo.firstScorableWhoop5RrTs(id))
+        insertRr(ts = 400L, channel = 5)
+        assertEquals(400L, repo.firstScorableWhoop5RrTs(id))
+        // The lower bound ignores the channel entirely and still refuses the suspect stamp.
+        assertEquals(100L, repo.firstRecordedRrTs(id))
+        // Another device's beats never leak into either answer.
+        assertNull(repo.firstScorableWhoop5RrTs("someone-else"))
+        assertNull(repo.firstRecordedRrTs("someone-else"))
+    }
+
+    private fun insertRr(ts: Long, channel: Int?, suspect: Int? = null, device: String = id) {
+        statement(
+            "INSERT OR REPLACE INTO rrInterval(deviceId, ts, rrMs, seq, synced, ord, srcChannel, tsSuspect) " +
+                "VALUES(:deviceId, :ts, 1000, 0, 0, 0, :srcChannel, :tsSuspect)",
+            mapOf("deviceId" to device, "ts" to ts, "srcChannel" to channel, "tsSuspect" to suspect),
+        ).use { it.executeUpdate() }
+    }
 
     @Test fun sourceFingerprintQueriesUseCoveringIndex() {
         val plan = query("EXPLAIN QUERY PLAN $ANALYSIS_FINGERPRINT_SQL") { it.getString("detail") }

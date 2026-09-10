@@ -210307,6 +210307,28 @@
         "ru": {"stringUnit": {"state": "translated", "value": "Открывает тренд и показания"}},
         "zh-Hans": {"stringUnit": {"state": "translated", "value": "打开趋势和读数"}},
         "zh-Hant": {"stringUnit": {"state": "translated", "value": "開啟趨勢與讀數"}}
+    } },
+    "Earlier beats cannot be scored" : { "localizations" : {
+        "de": {"stringUnit": {"state": "translated", "value": "Frühere Herzschläge nicht auswertbar"}},
+        "es": {"stringUnit": {"state": "translated", "value": "Los latidos anteriores no se pueden puntuar"}},
+        "fr": {"stringUnit": {"state": "translated", "value": "Battements antérieurs non évaluables"}},
+        "it": {"stringUnit": {"state": "translated", "value": "I battiti precedenti non sono valutabili"}},
+        "pl": {"stringUnit": {"state": "translated", "value": "Wcześniejszych uderzeń nie można ocenić"}},
+        "pt-PT": {"stringUnit": {"state": "translated", "value": "Batimentos anteriores não podem ser pontuados"}},
+        "ru": {"stringUnit": {"state": "translated", "value": "Ранние удары невозможно оценить"}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "早期心跳无法评分"}},
+        "zh-Hant": {"stringUnit": {"state": "translated", "value": "早期心跳無法評分"}}
+    } },
+    "This night was recorded before NOOP labelled which WHOOP 5 transport each heartbeat came from, so its intervals mix two different units with nothing stored to tell them apart. The night stays in your history, and nights recorded from now on score normally." : { "localizations" : {
+        "de": {"stringUnit": {"state": "translated", "value": "Diese Nacht wurde aufgezeichnet, bevor NOOP festhielt, über welchen WHOOP-5-Übertragungsweg jeder Herzschlag kam. Ihre Intervalle mischen deshalb zwei verschiedene Einheiten, und es ist nichts gespeichert, was sie unterscheidbar macht. Die Nacht bleibt in deinem Verlauf, und ab jetzt aufgezeichnete Nächte werden normal bewertet."}},
+        "es": {"stringUnit": {"state": "translated", "value": "Esta noche se registró antes de que NOOP etiquetara de qué transporte de WHOOP 5 procedía cada latido, así que sus intervalos mezclan dos unidades distintas y no hay nada guardado que permita distinguirlas. La noche permanece en tu historial y las noches registradas a partir de ahora se puntúan con normalidad."}},
+        "fr": {"stringUnit": {"state": "translated", "value": "Cette nuit a été enregistrée avant que NOOP n'indique de quel transport WHOOP 5 provenait chaque battement. Ses intervalles mêlent donc deux unités différentes, sans rien d'enregistré pour les distinguer. La nuit reste dans votre historique, et les nuits enregistrées à partir de maintenant sont évaluées normalement."}},
+        "it": {"stringUnit": {"state": "translated", "value": "Questa notte è stata registrata prima che NOOP indicasse da quale trasporto WHOOP 5 provenisse ogni battito, quindi i suoi intervalli mescolano due unità diverse e non è memorizzato nulla che permetta di distinguerle. La notte resta nella tua cronologia e le notti registrate da ora in poi vengono valutate normalmente."}},
+        "pl": {"stringUnit": {"state": "translated", "value": "Ta noc została zarejestrowana, zanim NOOP zaczął oznaczać, z którego kanału WHOOP 5 pochodzi każde uderzenie, więc jej odstępy mieszają dwie różne jednostki i nic zapisanego nie pozwala ich rozróżnić. Noc pozostaje w Twojej historii, a noce zarejestrowane od teraz są oceniane normalnie."}},
+        "pt-PT": {"stringUnit": {"state": "translated", "value": "Esta noite foi registada antes de o NOOP identificar de que transporte WHOOP 5 vinha cada batimento, por isso os seus intervalos misturam duas unidades diferentes e não há nada guardado que permita distingui-las. A noite mantém-se no teu histórico e as noites registadas a partir de agora são pontuadas normalmente."}},
+        "ru": {"stringUnit": {"state": "translated", "value": "Эта ночь была записана до того, как NOOP начал отмечать, по какому каналу WHOOP 5 пришёл каждый удар, поэтому её интервалы смешивают две разные единицы, и ничего не сохранено, что позволило бы их различить. Ночь остаётся в вашей истории, а ночи, записанные с этого момента, оцениваются как обычно."}},
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "这一夜是在 NOOP 标记每次心跳来自哪条 WHOOP 5 传输通道之前记录的，因此其间隔混合了两种不同的单位，而且没有保存任何可以区分它们的信息。该夜仍保留在你的历史记录中，从现在起记录的夜晚会正常评分。"}},
+        "zh-Hant": {"stringUnit": {"state": "translated", "value": "這一夜是在 NOOP 標記每次心跳來自哪條 WHOOP 5 傳輸通道之前記錄的，因此其間隔混合了兩種不同的單位，而且沒有儲存任何可以區分它們的資訊。該夜仍保留在你的歷史記錄中，從現在起記錄的夜晚會正常評分。"}}
     } }
   },
   "version": "1.0"
