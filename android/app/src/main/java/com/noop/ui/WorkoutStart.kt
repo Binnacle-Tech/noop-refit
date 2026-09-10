@@ -282,7 +282,10 @@ fun WorkoutStartSection(vm: AppViewModel, onAdd: () -> Unit) {
         }
     } else {
         // No strap to stream from: no live Start, but keep Add so a user with no imports can still log.
-        AddWorkoutButton(onAdd, Modifier.fillMaxWidth())
+        // PRIMARY here, unlike the pair above. There is no Start to be secondary to, and this is the
+        // only action the screen offers, so the secondary treatment would leave a wearer with no strap
+        // looking at the faintest control in the app as their sole way forward.
+        AddWorkoutButton(onAdd, Modifier.fillMaxWidth(), kind = NoopButtonKind.Primary)
     }
 
     if (showSportPicker) {

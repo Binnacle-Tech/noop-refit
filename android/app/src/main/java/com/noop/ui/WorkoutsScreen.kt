@@ -436,14 +436,25 @@ private fun PostLogNoteBanner(text: String) {
     }
 }
 
-/** The secondary workout action, kept on an opaque design-system surface so the daytime scene
- * cannot wash out its fill or label (#1625). */
+/** The manual workout action, kept on an opaque design-system surface so the daytime scene cannot
+ *  wash out its fill or label (#1625).
+ *
+ *  [kind] is a parameter rather than a constant because this composable is BOTH halves of a pair and
+ *  a lone action, depending on the strap. Beside a live Start it is genuinely secondary. On the
+ *  unbonded branch it is the only thing on the screen and the whole reason that branch exists, so
+ *  pinning it to Secondary everywhere would render the emptiest state's single call to action as the
+ *  most de-emphasised control the design system has. The caller knows which it is; this does not.
+ */
 @Composable
-internal fun AddWorkoutButton(onAdd: () -> Unit, modifier: Modifier = Modifier) {
+internal fun AddWorkoutButton(
+    onAdd: () -> Unit,
+    modifier: Modifier = Modifier,
+    kind: NoopButtonKind = NoopButtonKind.Secondary,
+) {
     NoopButton(
         text = uiString(R.string.l10n_workouts_screen_add_workout_a196a2cc),
         leadingIcon = Icons.Filled.Add,
-        kind = NoopButtonKind.Secondary,
+        kind = kind,
         modifier = modifier
     ) { onAdd() }
 }
