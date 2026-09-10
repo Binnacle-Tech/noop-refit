@@ -1732,6 +1732,10 @@ fun TodayScreen(
                         // #today-hosted-cards: the Trends/Sleep cards the user pulled into Today, in
                         // arranged order. Each is the SAME card its home tab renders (a mirror).
                         TodaySection.ADDED_CARDS -> HostedCardsSection(
+                            effortScale = effortScale,
+                            onOpenStress = onOpenStress,
+                            onOpenSleep = onOpenSleep,
+                            onOpenMetric = onOpenMetric,
                             cards = enabledHostedCards,
                             days = days,
                             viewModel = viewModel,
@@ -3472,7 +3476,18 @@ private fun TodayEditAction(
  * confirmation toast). Renders nothing when [cards] is empty. Twin of the iOS `hostedCardsSection`.
  */
 @Composable
-private fun HostedCardsSection(cards: List<HostedCard>, days: List<DailyMetric>, viewModel: AppViewModel) {
+private fun HostedCardsSection(
+    cards: List<HostedCard>,
+    days: List<DailyMetric>,
+    viewModel: AppViewModel,
+    // Passed in rather than read here: Today already resolved it once for its own tiles, and reading
+    // SharedPreferences per hosted card per recomposition would put a synchronous file read on the
+    // composition path of a screen that recomposes often.
+    effortScale: EffortScale,
+    onOpenStress: () -> Unit,
+    onOpenSleep: () -> Unit,
+    onOpenMetric: (String) -> Unit,
+) {
     if (cards.isEmpty()) return
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -3503,10 +3518,36 @@ private fun HostedCardsSection(cards: List<HostedCard>, days: List<DailyMetric>,
             emptyList()
         }
     }
+    // Turning the card's own destination into the callback that reaches it. The mapping itself lives
+    // on `HostedCard` so a test can assert it; this is only the wiring, which cannot be tested and does
+    // not need to be.
+    fun opener(card: HostedCard): (() -> Unit)? = when (val d = card.destination) {
+        HostedDestination.None -> null
+        HostedDestination.Sleep -> onOpenSleep
+        HostedDestination.Stress -> onOpenStress
+        is HostedDestination.Metric -> ({ onOpenMetric(d.key) })
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(Metrics.sectionGap)) {
         cards.forEach { card ->
+            val open = opener(card)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    // Clipped to the card's own radius BEFORE the click. `NoopCard` clips itself, but
+                    // the ripple draws on this wrapper, so without matching the shape here it would wash
+                    // square corners over a rounded card. `Metrics.cardRadius` is the right figure
+                    // because every hosted card renders through `NoopCard`: the 26dp liquid-hero
+                    // surface `ChartCard` can wear is hero-only, and none of these opt into it.
+                    .clip(RoundedCornerShape(Metrics.cardRadius))
+                    .then(if (open != null) Modifier.clickable(onClick = open) else Modifier),
+            ) {
             when (card) {
                 HostedCard.STRESS_TODAY -> StressTodayCard(stressCurve)
+                // The Trends-origin trends. `resolveMetric` walks the `days` already in hand, so these
+                // need no model build and no gate, unlike the sleep and stress cards above.
+                HostedCard.TREND_HRV, HostedCard.TREND_RESTING_HR, HostedCard.TREND_EFFORT ->
+                    TrendHostCard(card, days, effortScale)
                 HostedCard.SLEEP_MARKS -> SleepMarkCard(
                     onMark = { type ->
                         val mark = SleepMark.now(type)
@@ -3554,6 +3595,7 @@ private fun HostedCardsSection(cards: List<HostedCard>, days: List<DailyMetric>,
                 // ConsistencyHostCard. Null until the async build lands / no stage data — the slot renders
                 // nothing this frame, matching the Sleep tab's null-model guard.
                 HostedCard.CONSISTENCY -> hostedSleepModel?.let { ConsistencyHostCard(it) }
+            }
             }
         }
     }
