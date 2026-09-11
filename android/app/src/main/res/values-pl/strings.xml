@@ -2764,4 +2764,5 @@
     <string name="coach_key_rejected_action">Zaktualizuj klucz</string>
     <string name="coach_consent_on">Włączone: Twój ładunek, odpoczynek, HRV i treningi trafiają do dostawcy, każdy trening ze sportem, czasem, dystansem i tętnem.</string>
     <string name="coach_consent_off">Wyłączone: coach odpowiada ogólnie i nie wysyła żadnych Twoich danych.</string>
+    <string name="l10n_app_changelog_a_today_screen_you_arrange_yourself_6194ccd0">Ekran Dzisiaj, który układasz sam, stres na ekranie głównym i kopie zapasowe, które same się sprawdzają</string>
 </resources>

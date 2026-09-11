@@ -26,7 +26,7 @@ object AppChangelog {
      * Bump this when you add a release below. The "What's New" sheet shows automatically when the
      * stored last-seen version is behind this. (Decoupled from the bundle version on purpose.)
      */
-    const val CURRENT_VERSION = "11.5.0"
+    const val CURRENT_VERSION = "11.6.0"
 
     data class Release(
         val version: String,
@@ -37,6 +37,23 @@ object AppChangelog {
 
     /** Newest first. */
     val releases: List<Release> = listOf(
+        Release(
+            version = "11.6.0",
+            title = uiString(R.string.l10n_app_changelog_a_today_screen_you_arrange_yourself_6194ccd0),
+            date = "September 2026",
+            items = listOf(
+                "**Stress on your home screen (#2044, #2045).** A widget showing today's stress curve, on both platforms. It fills without needing the app opened, and when it has nothing to draw it says why instead of sitting blank (#2074).",
+                "**A Today screen you arrange yourself (#2047, #2051, #2053, #2054).** Today's stress curve and the Trends charts can now be placed on Today as cards, on both platforms. Tapping a hosted card opens the tab it came from rather than stranding you (#2052), and a hero ring on the classic Today opens its own detail (#2060).",
+                "**Charts that break where the strap did (#2064, #2083).** A heart-rate line no longer draws straight through hours the strap never recorded, on every surface that draws one. A gap now looks like a gap.",
+                "**WHOOP 5 readings corrected (#2046, #2042, #2056, thanks @Trillient).** R-R intervals are read in the units the strap actually sends, which feeds HRV. Skin temperature now reaches recovery scoring before the score is computed rather than after. Both platforms carry tests covering the gaps these came from.",
+                "**Backups that check themselves (#2086).** Every export path now verifies the file it actually wrote, so a truncated backup is caught when it is made instead of when you need it. When SQLite does complain, the message is shown in full and can be copied (#2084).",
+                "**A coach that holds on to your conversation (#2058, #2061).** A rejected API key can be corrected without losing the thread you were in. The coach is told what the workout was rather than only that one happened, the consent screen says what it actually sends (#2063), and the morning brief reaches the screen it was generated for (#2088).",
+                "**Diagnostics that say why, not just how many (#2080, #2094).** A night that missed the re-score cache now names the setting that dropped it. A dropped link is always recorded (#2065), the Live Console reads the device you actually selected (#2076), and the Rest card says why it is waiting on a sync (#2077).",
+                "**Your Oura serial stays out of the logs (#2095, #2090, thanks @pipiche38).** Serial numbers are masked in the Oura redactors on both platforms, and product-info replies no longer land in the raw diagnostics sidecar.",
+                "**Sharing a Test Centre report (#2096).** The Test Centre now hands you the bundle through the same share sheet the strap log uses, and stops there, instead of steering you into opening an issue.",
+                "**Smaller corrections.** Live heart rate stays armed while the Breathe screen is open (#2036, thanks @kiesstein). Workout actions stay readable over the daytime scene (#2050, thanks @kavemang). A silently dead duplicate string key is gone and the drifted Info.plist is regenerated (#2029, thanks @UtkuDenizAltiok). A manual workout can be entered by its start and end rather than only a duration (#2070), the strap picker seeds from the family actually recorded (#2067), and Today's heart-rate high and low read the samples rather than the mean curve (#2038).",
+            ),
+        ),
         Release(
             version = "11.5.0",
             title = uiString(R.string.l10n_app_changelog_a_coach_that_keeps_the_thread_2ee52e0c),
